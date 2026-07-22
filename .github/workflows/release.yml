@@ -97,9 +97,18 @@ jobs:
           for f in dist/*_x86_64.apk; do [ -e "$f" ] && cp "$f" gh-pages-repo/alpine/x86_64/; done
           for f in dist/*_aarch64.apk; do [ -e "$f" ] && cp "$f" gh-pages-repo/alpine/aarch64/; done
 
-      - name: Deploy Repositories to GitHub Pages
+      - name: Deploy Repositories to gh-pages branch
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./gh-pages-repo
           force_orphan: true
+
+      - name: Upload artifact for GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./gh-pages-repo
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
