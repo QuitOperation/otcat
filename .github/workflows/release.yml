@@ -80,15 +80,13 @@ jobs:
             cd gh-pages-repo
             dpkg-scanpackages . /dev/null > Packages
             gzip -k -f Packages
-            cat <<EOF > Release
-Origin: QuitOperation
-Label: otcat
-Suite: stable
-Codename: stable
-Architectures: amd64 arm64
-Components: main
-Description: otcat APT repository
-EOF
+            echo "Origin: QuitOperation" > Release
+            echo "Label: otcat" >> Release
+            echo "Suite: stable" >> Release
+            echo "Codename: stable" >> Release
+            echo "Architectures: amd64 arm64" >> Release
+            echo "Components: main" >> Release
+            echo "Description: otcat APT repository" >> Release
           )
 
           # 2. RPM Repository (Fedora/RHEL/CentOS - dnf)
