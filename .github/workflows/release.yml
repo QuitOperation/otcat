@@ -55,7 +55,10 @@ jobs:
           ORG="quitoperation"      # <- confirm this matches your actual Cloudsmith namespace
           REPO="otcat"
           for f in dist/*_amd64.deb dist/*_arm64.deb; do
-            [ -e "$f" ] && cloudsmith push deb "$ORG/$REPO/ubuntu/noble" "$f" --republish
+            if [ -e "$f" ]; then
+              cloudsmith push deb "$ORG/$REPO/debian/any-version" "$f" --republish || true
+              cloudsmith push deb "$ORG/$REPO/ubuntu/any-version" "$f" --republish || true
+            fi
           done
           for f in dist/*.x86_64.rpm dist/*.aarch64.rpm; do
             [ -e "$f" ] && cloudsmith push rpm "$ORG/$REPO/el/9" "$f" --republish
