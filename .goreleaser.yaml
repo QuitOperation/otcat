@@ -95,6 +95,24 @@ nfpms:
 checksum:
   name_template: "otcat_{{ .Version }}_checksums.txt"
 
+dockers:
+  - image_templates:
+      - "ghcr.io/quitoperation/otcat:{{ .Version }}"
+      - "ghcr.io/quitoperation/otcat:latest"
+    dockerfile: Dockerfile
+    ids:
+      - otcat
+      - otc
+    build_flag_templates:
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.name={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source=https://github.com/QuitOperation/otcat"
+    extra_files:
+      - README.md
+      - LICENSE
+
 changelog:
   sort: asc
   filters:
