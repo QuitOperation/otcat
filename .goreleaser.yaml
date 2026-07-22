@@ -105,6 +105,7 @@ changelog:
 
 release:
   mode: replace
+  replace_existing_artifacts: true
   github:
     owner: QuitOperation
     name: otcat
