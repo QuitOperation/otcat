@@ -10,7 +10,7 @@ jobs:
     name: Build and publish Python package to PyPI
     runs-on: ubuntu-latest
     permissions:
-      id-token: write  # Mandatory for PyPI Trusted Publishing (OIDC)
+      id-token: write  # Required for PyPI Trusted Publishing (OIDC)
       contents: read
 
     steps:
@@ -35,18 +35,7 @@ jobs:
           cd python
           python -m build
 
-      - name: Publish package distribution to PyPI
+      - name: Publish package to PyPI via OIDC Trusted Publishing
         uses: pypa/gh-action-pypa-publish@release/v1
         with:
           packages-dir: python/dist/
-          password: ${{ secrets.PYPI_API_TOKEN }}
-        continue-on-error: true
-
-      - name: Fallback Twine Upload (if API token is set)
-        if: ${{ env.PYPI_API_TOKEN != '' }}
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-        run: |
-          pip install twine
-          twine upload python/dist/* --skip-existing
