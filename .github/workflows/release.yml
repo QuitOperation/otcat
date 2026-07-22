@@ -8,6 +8,8 @@ on:
 permissions:
   contents: write
   packages: write
+  pages: write
+  id-token: write
 
 jobs:
   goreleaser:
@@ -66,3 +68,28 @@ jobs:
           for f in dist/*.apk; do
             [ -e "$f" ] && cloudsmith push alpine "$ORG/$REPO/alpine/v3.20" "$f" --republish
           done
+
+      - name: Generate APT repository for GitHub Pages
+        run: |
+          sudo apt-get update && sudo apt-get install -y dpkg-dev
+          mkdir -p apt-repo
+          cp dist/*.deb apt-repo/
+          cd apt-repo
+          dpkg-scanpackages . /dev/null > Packages
+          gzip -k -f Packages
+          cat <<EOF > Release
+          Origin: QuitOperation
+          Label: otcat
+          Suite: stable
+          Codename: stable
+          Architectures: amd64 arm64
+          Components: main
+          Description: otcat APT repository
+          EOF
+
+      - name: Deploy APT repository to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./apt-repo
+          force_orphan: true
