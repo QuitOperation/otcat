@@ -1,0 +1,37 @@
+\documentclass[tikz, border=2pt]{standalone}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,backgrounds,calc,shapes.geometric}
+\input{style.tex}
+\tikzset{
+  dec/.style={draw=ink, thick, diamond, aspect=2.6, align=center, font=\sffamily\scriptsize,
+              fill=white, inner sep=2pt, text width=2.5cm},
+  term/.style={box, fill=ink!6},
+}
+\begin{document}
+\begin{tikzpicture}[node distance=9mm and 9mm]
+
+\node[term] (start) {spec: table \(T\), numeral \(N\) \\ \footnotesize e.g.\ \texttt{holding:40001}};
+\node[dec, below=of start] (rawflag) {\texttt{-{}-raw-address} \\ given?};
+\node[term, right=16mm of rawflag] (israw) {offset \(\leftarrow N\)};
+
+\node[dec, below=13mm of rawflag] (inband) {\(\mathrm{base}(T) \le N \)\\ \(\le \mathrm{base}(T){+}9998\) ?};
+\node[term, left=16mm of inband] (classic) {offset \(\leftarrow N - \mathrm{base}(T)\) \\ \footnotesize\itshape classic reference number};
+\node[term, below=13mm of inband] (literal) {offset \(\leftarrow N\) \\ \footnotesize\itshape literal wire offset};
+
+\node[dec, below=13mm of literal] (range) {offset \(> 0\)x\texttt{FFFF}?};
+\node[abortstate, right=16mm of range] (err) {reject: \\ \footnotesize \texttt{ErrInvalidInput}};
+\node[finalstate, below=10mm of range] (ok) {\texttt{Spec(T, offset, count)}};
+
+\draw[arr] (start) -- (rawflag);
+\draw[arr] (rawflag) -- node[lbl, above]{yes} (israw);
+\draw[arr] (israw) |- (range.north -| israw);
+\draw[arr] (rawflag) -- node[lbl, left]{no} (inband);
+\draw[arr] (inband) -- node[lbl, above]{yes} (classic);
+\draw[arr] (classic) |- (range.north -| classic);
+\draw[arr] (inband) -- node[lbl, left]{no} (literal);
+\draw[arr] (literal) -- (range);
+\draw[arr] (range) -- node[lbl, above]{yes} (err);
+\draw[arr] (range) -- node[lbl, left]{no} (ok);
+
+\end{tikzpicture}
+\end{document}

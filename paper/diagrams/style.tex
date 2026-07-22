@@ -1,0 +1,27 @@
+% Shared TikZ style, color-matched to paper/figures/*.pdf (matplotlib):
+% ink = near-black strokes/fill, accent = deep red for the one thing per
+% diagram that should draw the eye, grid = light gray for structure that
+% should recede.
+\definecolor{ink}{HTML}{1A1A1A}
+\definecolor{accent}{HTML}{A6192E}
+\definecolor{gridgray}{HTML}{D9D9D9}
+\definecolor{panelbg}{HTML}{F2F2F2}
+
+\tikzset{
+  every node/.style={font=\sffamily},
+  box/.style={draw=ink, thick, rounded corners=1.5pt, minimum height=0.75cm,
+              font=\sffamily\small, align=center, fill=white, text=ink},
+  stubbox/.style={box, draw=ink, dashed, fill=panelbg},
+  hibox/.style={box, fill=ink, text=white},
+  panel/.style={draw=none, fill=panelbg, rounded corners=2pt},
+  arr/.style={-{Latex[length=2.2mm, width=1.6mm]}, thick, draw=ink},
+  darr/.style={arr, dashed},
+  accarr/.style={-{Latex[length=2.2mm, width=1.6mm]}, thick, draw=accent},
+  lbl/.style={font=\sffamily\scriptsize, text=ink},
+  ital/.style={font=\sffamily\itshape\scriptsize, text=ink!70},
+  note/.style={font=\sffamily\scriptsize, align=left, text=ink},
+  state/.style={draw=ink, thick, rounded corners=3pt, minimum width=2.6cm,
+                minimum height=0.9cm, font=\sffamily\small, align=center, fill=white},
+  finalstate/.style={state, fill=ink, text=white},
+  abortstate/.style={state, draw=accent, thick, text=accent},
+}

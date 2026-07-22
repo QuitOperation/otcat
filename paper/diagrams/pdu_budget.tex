@@ -1,0 +1,36 @@
+\documentclass[tikz, border=2pt]{standalone}
+\usepackage{tikz}
+\usepackage{amsmath}
+\usetikzlibrary{arrows.meta,positioning,fit,backgrounds,calc,decorations.pathreplacing}
+\input{style.tex}
+\tikzset{
+  cell/.style={draw=ink, thick, minimum height=0.9cm, font=\sffamily\scriptsize, align=center, fill=white},
+  hicell/.style={cell, fill=ink!8},
+  brace/.style={decorate, decoration={brace, amplitude=4pt, raise=1pt}, thick, draw=ink!70},
+}
+\begin{document}
+\begin{tikzpicture}
+
+% --- Row 1: full ADU over TCP ---
+\node[lbl, anchor=west] at (-0.2,3.4) {ADU (TCP):};
+\node[cell, minimum width=1.6cm] (mbap) at (0.8+0,2.8) {MBAP\\7 B};
+\node[cell, minimum width=8.4cm, anchor=west] (pdu1) at (mbap.east) {PDU \(\le\) 253 B};
+\draw[brace] ([yshift=6pt]mbap.north west) -- ([yshift=6pt]pdu1.north east)
+  node[midway, above=3pt, lbl] {ADU \(\le\) 260 B (Modbus TCP)};
+
+% --- Row 2: PDU breakdown for a read-registers response ---
+\node[lbl, anchor=west] at (-0.2,1.5) {PDU (FC03/04 response):};
+\node[cell, minimum width=0.9cm] (fc) at (0.45,0.9) {FC\\1 B};
+\node[cell, minimum width=0.9cm, anchor=west] (bc) at (fc.east) {byteCount\\1 B};
+\node[hicell, minimum width=7.2cm, anchor=west] (data) at (bc.east) {register data \(\le\) 251 B};
+\draw[brace] ([yshift=6pt]fc.north west) -- ([yshift=6pt]data.north east)
+  node[midway, above=3pt, lbl] {PDU \(\le\) 253 B};
+
+% --- Row 3: derivation ---
+\node[note, text width=10.4cm, anchor=north west] at (-0.2,-0.3)
+  {\(\text{MaxReadRegisters} \;=\; \left\lfloor \dfrac{\text{maxPDU} - \text{FC} - \text{byteCount}}{\text{bytes/register}} \right\rfloor \;=\; \left\lfloor \dfrac{253 - 1 - 1}{2} \right\rfloor \;=\; \left\lfloor \dfrac{251}{2} \right\rfloor \;=\; \mathbf{125}\)};
+\node[note, text width=10.4cm, anchor=north west, text=ink!65] at (-0.2,-1.55)
+  {the same budget, applied to bits instead of 16-bit registers and fixed at 2000 by \textsection6.1/\textsection6.2 rather than derived, bounds FC01/02 reads; \textsection6.11/\textsection6.12 subtract a 5-byte address/quantity/byteCount header instead of 2, giving 1968 coils and 123 registers for the write-multiple codes.};
+
+\end{tikzpicture}
+\end{document}

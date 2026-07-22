@@ -1,0 +1,12 @@
+/bin/
+/coverage.out
+*.test
+/dist/
+__pycache__/
+*.pyc
+python/dist/
+python/build/
+python/*.egg-info/
+python/.pytest_cache/
+python/.mypy_cache/
+python/.ruff_cache/

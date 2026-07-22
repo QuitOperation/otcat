@@ -1,0 +1,39 @@
+\documentclass[tikz, border=2pt]{standalone}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,backgrounds,calc,shapes.geometric}
+\input{style.tex}
+\tikzset{
+  dec/.style={draw=ink, thick, diamond, aspect=2.4, align=center, font=\sffamily\scriptsize,
+              fill=white, inner sep=2pt, text width=2.3cm},
+}
+\begin{document}
+\begin{tikzpicture}[node distance=9mm and 11mm]
+
+\node[state] (start) {\texttt{--write} requested};
+\node[dec, below=of start] (confirm) {\texttt{-{}-confirm}\\given?};
+\node[finalstate, right=22mm of confirm] (exec) {send write \\ \footnotesize emit ack};
+
+\node[dec, below=13mm of confirm] (stdin) {\texttt{-{}-from-stdin}?};
+\node[abortstate, right=22mm of stdin] (abort1) {refuse \\ \footnotesize exit 4 \\ \footnotesize\itshape stdin already \\ \footnotesize\itshape consumed};
+
+\node[dec, below=13mm of stdin] (tty) {stdin is an \\ interactive tty?};
+\node[abortstate, left=22mm of tty] (abort2) {refuse \\ \footnotesize exit 4 \\ \footnotesize\itshape non-interactive, \\ \footnotesize\itshape no prompt possible};
+
+\node[state, below=13mm of tty] (prompt) {prompt on stderr \\ \footnotesize\ttfamily write X to Y? {[}y/N{]}};
+\node[dec, below=13mm of prompt] (yn) {answer \(=\) y / yes?};
+\node[abortstate, right=22mm of yn] (abort3) {refuse \\ \footnotesize exit 4};
+\node[finalstate, left=22mm of yn] (exec2) {send write \\ \footnotesize emit ack};
+
+\draw[arr] (start) -- (confirm);
+\draw[arr] (confirm) -- node[lbl,above]{yes} (exec);
+\draw[arr] (confirm) -- node[lbl,left]{no} (stdin);
+\draw[arr] (stdin) -- node[lbl,above]{yes} (abort1);
+\draw[arr] (stdin) -- node[lbl,left]{no} (tty);
+\draw[arr] (tty) -- node[lbl,above]{no} (abort2);
+\draw[arr] (tty) -- node[lbl,left]{yes} (prompt);
+\draw[arr] (prompt) -- (yn);
+\draw[arr] (yn) -- node[lbl,above]{no / EOF} (abort3);
+\draw[arr] (yn) -- node[lbl,above]{yes} (exec2);
+
+\end{tikzpicture}
+\end{document}

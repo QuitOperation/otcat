@@ -1,0 +1,116 @@
+# GoReleaser configuration. Validate locally with:
+#   goreleaser check
+#   goreleaser release --snapshot --clean   (builds everything without publishing)
+# Real releases run from CI on a pushed tag (.github/workflows/release.yml);
+# see docs/releasing.md for the full pipeline including Cloudsmith.
+version: 2
+
+project_name: otcat
+
+before:
+  hooks:
+    - go mod tidy
+    - go vet ./...
+
+builds:
+  - id: otcat
+    main: ./cmd/otcat
+    binary: otcat
+    env: [CGO_ENABLED=0]
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.ShortCommit}}
+
+  - id: otc
+    main: ./cmd/otc
+    binary: otc
+    env: [CGO_ENABLED=0]
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.ShortCommit}}
+
+  - id: otcat-mockplc
+    main: ./cmd/otcat-mockplc
+    binary: otcat-mockplc
+    env: [CGO_ENABLED=0]
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    ldflags: [-s -w]
+
+  - id: otcat-latencyprobe
+    main: ./cmd/otcat-latencyprobe
+    binary: otcat-latencyprobe
+    env: [CGO_ENABLED=0]
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    ldflags: [-s -w]
+
+archives:
+  - id: default
+    ids: [otcat, otc, otcat-mockplc, otcat-latencyprobe]
+    name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_
+      {{- if eq .Os "darwin" }}macOS
+      {{- else }}{{ title .Os }}{{ end }}_
+      {{- if eq .Arch "amd64" }}x86_64{{ else }}{{ .Arch }}{{ end }}
+    formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    files:
+      - LICENSE
+      - README.md
+
+# Linux packages (.deb/.rpm/.apk) for native package-manager installs
+# (apt/dnf/apk), built by nfpm and published to Cloudsmith by a separate
+# CI step -- see docs/releasing.md. otcat-mockplc and otcat-latencyprobe
+# are intentionally left out of these: they're demo/dev tools, not
+# something you install system-wide via a package manager.
+nfpms:
+  - id: packages
+    ids: [otcat, otc]
+    package_name: otcat
+    file_name_template: "{{ .ConventionalFileName }}"
+    vendor: QuitOperation
+    homepage: https://github.com/QuitOperation/otcat
+    maintainer: Moustafa Mahmoud Atta <MoustafaAt1a@outlook.com>
+    description: >-
+      otcat -- the netcat for industrial I/O. Read, write, and watch
+      Modbus TCP registers from the shell.
+    license: MIT
+    formats: [deb, rpm, apk]
+    bindir: /usr/bin
+    contents:
+      - src: LICENSE
+        dst: /usr/share/doc/otcat/LICENSE
+      - src: README.md
+        dst: /usr/share/doc/otcat/README.md
+
+checksum:
+  name_template: "otcat_{{ .Version }}_checksums.txt"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^ci:"
+
+release:
+  github:
+    owner: QuitOperation
+    name: otcat
+  footer: |
+    ## Installing
+
+    - **Any OS with Go 1.22+**: `go install github.com/QuitOperation/otcat/cmd/otcat@latest`
+    - **Debian/Ubuntu, Fedora/RHEL, Alpine**: see the Cloudsmith setup in
+      [docs/releasing.md](https://github.com/QuitOperation/otcat/blob/main/docs/releasing.md)
+    - **Everyone else**: grab the archive for your OS/arch below.

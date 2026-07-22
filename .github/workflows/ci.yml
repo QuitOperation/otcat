@@ -1,0 +1,38 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          check-latest: true
+
+      - name: gofmt
+        run: |
+          diff -u <(echo -n) <(gofmt -l .)
+
+      - name: go vet
+        run: go vet ./...
+
+      - name: build
+        run: go build ./...
+
+      - name: test (race + cover)
+        run: go test ./... -race -count=1 -coverprofile=coverage.out
+
+      - name: coverage summary
+        run: go tool cover -func=coverage.out | tail -1
+
+      - name: fuzz smoke pass (10s per target, catches regressions cheaply)
+        run: |
+          for fz in FuzzDecodeMBAP FuzzDecodeReadRegistersResponse FuzzDecodeReadBitsResponse FuzzParseSpec FuzzCodecEncode; do
+            go test ./internal/modbus/ -fuzz=^${fz}\$ -fuzztime=10s -run=^\$ 2>&1 | tail -3
+          done

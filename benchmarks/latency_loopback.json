@@ -1,0 +1,13 @@
+{
+  "samples": 10000,
+  "registers_per_read": 10,
+  "min_us": 5,
+  "p50_us": 5,
+  "p90_us": 7,
+  "p99_us": 26,
+  "p999_us": 47,
+  "max_us": 579,
+  "mean_us": 5.9453,
+  "stddev_us": 6.830469084184488,
+  "throughput_reads_per_sec": 149663.29276215893
+}

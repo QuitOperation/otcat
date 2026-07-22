@@ -1,0 +1,92 @@
+[
+  {
+    "name": "BenchmarkJSONEncode",
+    "ns_op": 917.1999999999999,
+    "b_op": 168,
+    "allocs_op": 3
+  },
+  {
+    "name": "BenchmarkCSVEncode",
+    "ns_op": 395.1666666666667,
+    "b_op": 40,
+    "allocs_op": 2
+  },
+  {
+    "name": "BenchmarkRawEncode",
+    "ns_op": 91.51333333333332,
+    "b_op": 0,
+    "allocs_op": 0
+  },
+  {
+    "name": "BenchmarkEncodeReadRequest",
+    "ns_op": 0.1615,
+    "b_op": 0,
+    "allocs_op": 0
+  },
+  {
+    "name": "BenchmarkDecodeReadRegistersResponse",
+    "ns_op": 33.24,
+    "b_op": 24,
+    "allocs_op": 1
+  },
+  {
+    "name": "BenchmarkDecodeReadBitsResponse",
+    "ns_op": 30.61,
+    "b_op": 16,
+    "allocs_op": 1
+  },
+  {
+    "name": "BenchmarkCodecDecodeFloat32",
+    "ns_op": 23.069999999999997,
+    "b_op": 8,
+    "allocs_op": 2
+  },
+  {
+    "name": "BenchmarkCodecEncodeFloat32",
+    "ns_op": 41.76333333333333,
+    "b_op": 4,
+    "allocs_op": 1
+  },
+  {
+    "name": "BenchmarkParseSpecClassic",
+    "ns_op": 87.92,
+    "b_op": 48,
+    "allocs_op": 1
+  },
+  {
+    "name": "BenchmarkClientReadHoldingRegisters1",
+    "ns_op": 6439.0,
+    "b_op": 80,
+    "allocs_op": 10
+  },
+  {
+    "name": "BenchmarkClientReadHoldingRegisters10",
+    "ns_op": 6664.666666666667,
+    "b_op": 160,
+    "allocs_op": 10
+  },
+  {
+    "name": "BenchmarkClientReadHoldingRegisters125",
+    "ns_op": 7357.333333333333,
+    "b_op": 1112,
+    "allocs_op": 10
+  },
+  {
+    "name": "BenchmarkClientWriteSingleRegister",
+    "ns_op": 6431.333333333333,
+    "b_op": 88,
+    "allocs_op": 10
+  },
+  {
+    "name": "BenchmarkDriverReadEndToEnd",
+    "ns_op": 7024.666666666667,
+    "b_op": 160,
+    "allocs_op": 14
+  },
+  {
+    "name": "BenchmarkFullJitterBackoff",
+    "ns_op": 7.755,
+    "b_op": 0,
+    "allocs_op": 0
+  }
+]

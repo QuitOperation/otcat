@@ -1,0 +1,72 @@
+?   	github.com/otcat/otcat/cmd/otcat	[no test files]
+?   	github.com/otcat/otcat/cmd/otcat-mockplc	[no test files]
+?   	github.com/otcat/otcat/internal/bacnet	[no test files]
+PASS
+ok  	github.com/otcat/otcat/internal/cliapp	0.010s
+goos: linux
+goarch: amd64
+pkg: github.com/otcat/otcat/internal/codec
+cpu: Intel(R) Xeon(R) Processor @ 2.10GHz
+BenchmarkJSONEncode 	 1236157	       922.2 ns/op	     168 B/op	       3 allocs/op
+BenchmarkJSONEncode 	 1201441	       912.4 ns/op	     168 B/op	       3 allocs/op
+BenchmarkJSONEncode 	 1296498	       917.0 ns/op	     168 B/op	       3 allocs/op
+BenchmarkCSVEncode  	 3068684	       391.9 ns/op	      40 B/op	       2 allocs/op
+BenchmarkCSVEncode  	 3048134	       395.4 ns/op	      40 B/op	       2 allocs/op
+BenchmarkCSVEncode  	 3092658	       398.2 ns/op	      40 B/op	       2 allocs/op
+BenchmarkRawEncode  	12987088	        93.02 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRawEncode  	13310528	        90.10 ns/op	       0 B/op	       0 allocs/op
+BenchmarkRawEncode  	13628977	        91.42 ns/op	       0 B/op	       0 allocs/op
+PASS
+ok  	github.com/otcat/otcat/internal/codec	14.974s
+?   	github.com/otcat/otcat/internal/eip	[no test files]
+?   	github.com/otcat/otcat/internal/mock	[no test files]
+goos: linux
+goarch: amd64
+pkg: github.com/otcat/otcat/internal/modbus
+cpu: Intel(R) Xeon(R) Processor @ 2.10GHz
+BenchmarkEncodeReadRequest             	1000000000	         0.1634 ns/op	       0 B/op	       0 allocs/op
+BenchmarkEncodeReadRequest             	1000000000	         0.1611 ns/op	       0 B/op	       0 allocs/op
+BenchmarkEncodeReadRequest             	1000000000	         0.1600 ns/op	       0 B/op	       0 allocs/op
+BenchmarkDecodeReadRegistersResponse   	36133244	        33.10 ns/op	      24 B/op	       1 allocs/op
+BenchmarkDecodeReadRegistersResponse   	35165505	        33.44 ns/op	      24 B/op	       1 allocs/op
+BenchmarkDecodeReadRegistersResponse   	35766168	        33.18 ns/op	      24 B/op	       1 allocs/op
+BenchmarkDecodeReadBitsResponse        	38066031	        29.83 ns/op	      16 B/op	       1 allocs/op
+BenchmarkDecodeReadBitsResponse        	39713548	        31.62 ns/op	      16 B/op	       1 allocs/op
+BenchmarkDecodeReadBitsResponse        	40032655	        30.38 ns/op	      16 B/op	       1 allocs/op
+BenchmarkCodecDecodeFloat32            	48000474	        23.04 ns/op	       8 B/op	       2 allocs/op
+BenchmarkCodecDecodeFloat32            	51762187	        23.31 ns/op	       8 B/op	       2 allocs/op
+BenchmarkCodecDecodeFloat32            	49522753	        22.86 ns/op	       8 B/op	       2 allocs/op
+BenchmarkCodecEncodeFloat32            	27745050	        42.65 ns/op	       4 B/op	       1 allocs/op
+BenchmarkCodecEncodeFloat32            	28700739	        42.21 ns/op	       4 B/op	       1 allocs/op
+BenchmarkCodecEncodeFloat32            	28435562	        40.43 ns/op	       4 B/op	       1 allocs/op
+BenchmarkParseSpecClassic              	13230696	        88.10 ns/op	      48 B/op	       1 allocs/op
+BenchmarkParseSpecClassic              	13856288	        86.62 ns/op	      48 B/op	       1 allocs/op
+BenchmarkParseSpecClassic              	14050635	        89.04 ns/op	      48 B/op	       1 allocs/op
+BenchmarkClientReadHoldingRegisters1   	  188298	      6408 ns/op	      80 B/op	      10 allocs/op
+BenchmarkClientReadHoldingRegisters1   	  192037	      6438 ns/op	      80 B/op	      10 allocs/op
+BenchmarkClientReadHoldingRegisters1   	  185852	      6471 ns/op	      80 B/op	      10 allocs/op
+BenchmarkClientReadHoldingRegisters10  	  178502	      6556 ns/op	     160 B/op	      10 allocs/op
+BenchmarkClientReadHoldingRegisters10  	  183514	      6596 ns/op	     160 B/op	      10 allocs/op
+BenchmarkClientReadHoldingRegisters10  	  148960	      6842 ns/op	     160 B/op	      10 allocs/op
+BenchmarkClientReadHoldingRegisters125 	  152378	      7436 ns/op	    1112 B/op	      10 allocs/op
+BenchmarkClientReadHoldingRegisters125 	  163812	      7488 ns/op	    1112 B/op	      10 allocs/op
+BenchmarkClientReadHoldingRegisters125 	  161425	      7148 ns/op	    1112 B/op	      10 allocs/op
+BenchmarkClientWriteSingleRegister     	  186961	      6514 ns/op	      88 B/op	      10 allocs/op
+BenchmarkClientWriteSingleRegister     	  192412	      6415 ns/op	      88 B/op	      10 allocs/op
+BenchmarkClientWriteSingleRegister     	  192295	      6365 ns/op	      88 B/op	      10 allocs/op
+BenchmarkDriverReadEndToEnd            	  159198	      7116 ns/op	     160 B/op	      14 allocs/op
+BenchmarkDriverReadEndToEnd            	  175152	      7069 ns/op	     160 B/op	      14 allocs/op
+BenchmarkDriverReadEndToEnd            	  167558	      6889 ns/op	     160 B/op	      14 allocs/op
+PASS
+ok  	github.com/otcat/otcat/internal/modbus	37.859s
+?   	github.com/otcat/otcat/internal/protocol	[no test files]
+?   	github.com/otcat/otcat/internal/s7	[no test files]
+goos: linux
+goarch: amd64
+pkg: github.com/otcat/otcat/internal/watch
+cpu: Intel(R) Xeon(R) Processor @ 2.10GHz
+BenchmarkFullJitterBackoff 	155156677	         7.732 ns/op	       0 B/op	       0 allocs/op
+BenchmarkFullJitterBackoff 	154659300	         7.741 ns/op	       0 B/op	       0 allocs/op
+BenchmarkFullJitterBackoff 	151782079	         7.792 ns/op	       0 B/op	       0 allocs/op
+PASS
+ok  	github.com/otcat/otcat/internal/watch	5.950s
