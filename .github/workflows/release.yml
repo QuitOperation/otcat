@@ -69,27 +69,39 @@ jobs:
             [ -e "$f" ] && cloudsmith push alpine "$ORG/$REPO/alpine/v3.20" "$f" --republish
           done
 
-      - name: Generate APT repository for GitHub Pages
+      - name: Generate APT, DNF (RPM), and Alpine (APK) repositories for GitHub Pages
         run: |
-          sudo apt-get update && sudo apt-get install -y dpkg-dev
-          mkdir -p apt-repo
-          cp dist/*.deb apt-repo/
-          cd apt-repo
-          dpkg-scanpackages . /dev/null > Packages
-          gzip -k -f Packages
-          cat <<EOF > Release
-          Origin: QuitOperation
-          Label: otcat
-          Suite: stable
-          Codename: stable
-          Architectures: amd64 arm64
-          Components: main
-          Description: otcat APT repository
-          EOF
+          sudo apt-get update && sudo apt-get install -y dpkg-dev createrepo-c
+          mkdir -p gh-pages-repo/rpm gh-pages-repo/alpine/x86_64 gh-pages-repo/alpine/aarch64
 
-      - name: Deploy APT repository to GitHub Pages
+          # 1. APT Repository (Debian/Ubuntu - root + subfolder)
+          cp dist/*.deb gh-pages-repo/
+          (
+            cd gh-pages-repo
+            dpkg-scanpackages . /dev/null > Packages
+            gzip -k -f Packages
+            cat <<EOF > Release
+Origin: QuitOperation
+Label: otcat
+Suite: stable
+Codename: stable
+Architectures: amd64 arm64
+Components: main
+Description: otcat APT repository
+EOF
+          )
+
+          # 2. RPM Repository (Fedora/RHEL/CentOS - dnf)
+          cp dist/*.rpm gh-pages-repo/rpm/
+          createrepo_c gh-pages-repo/rpm
+
+          # 3. APK Files for Alpine (apk)
+          for f in dist/*_x86_64.apk; do [ -e "$f" ] && cp "$f" gh-pages-repo/alpine/x86_64/; done
+          for f in dist/*_aarch64.apk; do [ -e "$f" ] && cp "$f" gh-pages-repo/alpine/aarch64/; done
+
+      - name: Deploy Repositories to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./apt-repo
+          publish_dir: ./gh-pages-repo
           force_orphan: true
