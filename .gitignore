@@ -10,3 +10,8 @@ python/*.egg-info/
 python/.pytest_cache/
 python/.mypy_cache/
 python/.ruff_cache/
+
+# paper folder rules
+paper/*
+!paper/README.md
+!paper/otcat.pdf
