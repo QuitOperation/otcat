@@ -1624,13 +1624,13 @@
           <p>No heavy GUI software overhead. Execute single-shot register reads or stream continuous live telemetry watch loops with exponential backoff and zero vendor bloat.</p>
           
           <ul class="feature-bullets-list">
-            <li><span class="bullet-icon">⚡</span> <span><strong>Zero GUI Overhead:</strong> Sub-5ms Modbus TCP query response times over terminal socket.</span></li>
-            <li><span class="bullet-icon">🛡️</span> <span><strong>Safety Write Gate:</strong> Interactive confirmation and <code>--confirm</code> flag prevent write accidents.</span></li>
-            <li><span class="bullet-icon">🔁</span> <span><strong>Live Telemetry Watch:</strong> Stream real-time telemetry into <code>awk</code>, <code>jq</code>, or <code>grep</code> pipelines.</span></li>
+            <li><span><strong>Zero GUI Overhead:</strong> Sub-5ms Modbus TCP query response times over terminal socket.</span></li>
+            <li><span><strong>Safety Write Gate:</strong> Interactive confirmation and <code>--confirm</code> flag prevent write accidents.</span></li>
+            <li><span><strong>Live Telemetry Watch:</strong> Stream real-time telemetry into <code>awk</code>, <code>jq</code>, or <code>grep</code> pipelines.</span></li>
           </ul>
 
           <div class="tip-card-editorial">
-            <span class="tip-badge">⚡ Quick Tip</span>
+            <span class="tip-badge">Quick Tip</span>
             <span>Use <code>otc</code> as a short binary alias (<code>nc</code> : <code>netcat</code> :: <code>otc</code> : <code>otcat</code>) for maximum typing speed.</span>
           </div>
         </div>
@@ -1644,9 +1644,9 @@
               <div class="dot dot-green"></div>
             </div>
             <div class="terminal-tabs" role="tablist">
-              <button class="tab-btn active" role="tab" aria-selected="true" onclick="runDemo('read_json', this)">📄 Read JSON</button>
-              <button class="tab-btn" role="tab" aria-selected="false" onclick="runDemo('watch_mode', this)">📡 Live Watch</button>
-              <button class="tab-btn" role="tab" aria-selected="false" onclick="runDemo('write_confirm', this)">🛡️ Write Gate</button>
+              <button class="tab-btn active" role="tab" aria-selected="true" onclick="runDemo('read_json', this)">Read JSON</button>
+              <button class="tab-btn" role="tab" aria-selected="false" onclick="runDemo('watch_mode', this)">Live Watch</button>
+              <button class="tab-btn" role="tab" aria-selected="false" onclick="runDemo('write_confirm', this)">Write Gate</button>
             </div>
             <button class="btn-term-clear" onclick="clearTerminal()">Clear</button>
           </div>
