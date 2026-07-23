@@ -156,9 +156,11 @@ jobs:
           cp dist/*.rpm gh-pages-repo/rpm/
           createrepo_c gh-pages-repo/rpm
 
-          # 3. APK Files for Alpine (apk)
+          # 3. APK Repository for Alpine (apk add)
           for f in dist/*_x86_64.apk; do [ -e "$f" ] && cp "$f" gh-pages-repo/alpine/x86_64/; done
           for f in dist/*_aarch64.apk; do [ -e "$f" ] && cp "$f" gh-pages-repo/alpine/aarch64/; done
+          docker run --rm -v $(pwd)/gh-pages-repo/alpine/x86_64:/repo alpine:3.20 sh -c "cd /repo && apk index -o APKINDEX.tar.gz --allow-untrusted *.apk"
+          docker run --rm -v $(pwd)/gh-pages-repo/alpine/aarch64:/repo alpine:3.20 sh -c "cd /repo && apk index -o APKINDEX.tar.gz --allow-untrusted *.apk"
 
       - name: Deploy Repositories to gh-pages branch
         uses: peaceiris/actions-gh-pages@v4
