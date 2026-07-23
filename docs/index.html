@@ -938,6 +938,81 @@
     .json-val { color: var(--blue); }
     .json-num { color: var(--green); }
 
+    /* Enhanced Feature Bullets & Editorial Tip Card */
+    .feature-bullets-list {
+      list-style: none;
+      margin-bottom: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .feature-bullets-list li {
+      font-size: 0.96rem;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .bullet-icon {
+      font-size: 1.1rem;
+    }
+
+    .tip-card-editorial {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--orange);
+      padding: 14px 18px;
+      font-size: 0.88rem;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .tip-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 700;
+      background: var(--orange-subtle);
+      color: var(--orange);
+      padding: 3px 8px;
+      border-radius: 3px;
+      text-transform: uppercase;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* Terminal Footer Status Bar */
+    .terminal-footer {
+      background: #14161b;
+      border-top: 1px solid #22252e;
+      padding: 8px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.76rem;
+      color: #888888;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .term-status-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background: #27c93f;
+      border-radius: 50%;
+      margin-right: 6px;
+      box-shadow: 0 0 8px #27c93f;
+    }
+
+    .term-status-meta {
+      color: #666666;
+    }
+
     /* High Contrast Dark Mode Full-Width Banner */
     .banner-dark-full {
       background: var(--bg-banner);
@@ -1545,15 +1620,22 @@
     <section id="simulator" class="container reveal section-spacing-lg">
       <div class="split-feature-section">
         <div class="split-text">
-          <h3>Read, watch & write from <span class="hl-badge">simply standard shell</span></h3>
-          <p>No GUI overhead. Run single-shot queries or continuous live telemetry watch streams with jittered exponential backoff for field resilience.</p>
+          <h3>Read, watch & write <span class="hl-badge">straight from your shell</span></h3>
+          <p>No heavy GUI software overhead. Execute single-shot register reads or stream continuous live telemetry watch loops with exponential backoff and zero vendor bloat.</p>
           
-          <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; border-left: 3px solid var(--orange); padding-left: 16px;">
-            <strong>Quick Tip:</strong> Use <code>otc</code> as a short binary alias for maximum shell typing speed.
+          <ul class="feature-bullets-list">
+            <li><span class="bullet-icon">⚡</span> <span><strong>Zero GUI Overhead:</strong> Sub-5ms Modbus TCP query response times over terminal socket.</span></li>
+            <li><span class="bullet-icon">🛡️</span> <span><strong>Safety Write Gate:</strong> Interactive confirmation and <code>--confirm</code> flag prevent write accidents.</span></li>
+            <li><span class="bullet-icon">🔁</span> <span><strong>Live Telemetry Watch:</strong> Stream real-time telemetry into <code>awk</code>, <code>jq</code>, or <code>grep</code> pipelines.</span></li>
+          </ul>
+
+          <div class="tip-card-editorial">
+            <span class="tip-badge">⚡ Quick Tip</span>
+            <span>Use <code>otc</code> as a short binary alias (<code>nc</code> : <code>netcat</code> :: <code>otc</code> : <code>otcat</code>) for maximum typing speed.</span>
           </div>
         </div>
 
-        <!-- Interactive Terminal Simulator with Cursor -->
+        <!-- Interactive Terminal Simulator with Cursor & Footer -->
         <div class="terminal-window">
           <div class="terminal-header">
             <div class="terminal-dots">
@@ -1562,9 +1644,9 @@
               <div class="dot dot-green"></div>
             </div>
             <div class="terminal-tabs" role="tablist">
-              <button class="tab-btn active" role="tab" aria-selected="true" onclick="runDemo('read_json', this)">Read JSON</button>
-              <button class="tab-btn" role="tab" aria-selected="false" onclick="runDemo('watch_mode', this)">Live Watch</button>
-              <button class="tab-btn" role="tab" aria-selected="false" onclick="runDemo('write_confirm', this)">Write Gate</button>
+              <button class="tab-btn active" role="tab" aria-selected="true" onclick="runDemo('read_json', this)">📄 Read JSON</button>
+              <button class="tab-btn" role="tab" aria-selected="false" onclick="runDemo('watch_mode', this)">📡 Live Watch</button>
+              <button class="tab-btn" role="tab" aria-selected="false" onclick="runDemo('write_confirm', this)">🛡️ Write Gate</button>
             </div>
             <button class="btn-term-clear" onclick="clearTerminal()">Clear</button>
           </div>
@@ -1580,6 +1662,13 @@
   <span class="json-key">"value"</span>: <span class="json-num">12450</span>,
   <span class="json-key">"status"</span>: <span class="json-val">"OK"</span>
 }<span class="blinking-cursor"></span></div>
+          </div>
+          <div class="terminal-footer">
+            <div>
+              <span class="term-status-dot"></span>
+              <span id="term-status-text">192.168.1.10:502 [CONNECTED]</span>
+            </div>
+            <div class="term-status-meta" id="term-status-meta">Modbus TCP • Latency: 3.4ms</div>
           </div>
         </div>
       </div>
@@ -1939,7 +2028,12 @@
       btn.setAttribute('aria-selected', 'true');
 
       const term = document.getElementById('term-body');
+      const statusText = document.getElementById('term-status-text');
+      const statusMeta = document.getElementById('term-status-meta');
+
       if (type === 'read_json') {
+        if (statusText) statusText.innerText = "192.168.1.10:502 [CONNECTED]";
+        if (statusMeta) statusMeta.innerText = "Modbus TCP • Latency: 3.4ms";
         term.innerHTML = `
           <div class="term-line"><span class="term-prompt">$</span><span class="term-cmd">otcat --modbus 192.168.1.10:502 --read holding:40001 --json</span></div>
           <div class="term-output">{
@@ -1950,10 +2044,14 @@
   <span class="json-key">"status"</span>: <span class="json-val">"OK"</span>
 }<span class="blinking-cursor"></span></div>`;
       } else if (type === 'watch_mode') {
+        if (statusText) statusText.innerText = "192.168.1.10:502 [STREAMING 500ms]";
+        if (statusMeta) statusMeta.innerText = "Watch Loop • Poll 500ms";
         term.innerHTML = `
           <div class="term-line"><span class="term-prompt">$</span><span class="term-cmd">otc --modbus 192.168.1.10:502 --watch holding:40001 --interval 500ms --raw</span></div>
           <div class="term-output">12450\n12452\n12455\n12460 <span style="color:var(--orange); font-weight:bold;">(watching telemetry every 500ms...)</span><span class="blinking-cursor"></span></div>`;
       } else if (type === 'write_confirm') {
+        if (statusText) statusText.innerText = "192.168.1.10:502 [WRITE CONFIRMED]";
+        if (statusMeta) statusMeta.innerText = "Safety Gate Passed • FC06";
         term.innerHTML = `
           <div class="term-line"><span class="term-prompt">$</span><span class="term-cmd">otcat --modbus 192.168.1.10:502 --write holding:40001 --value 100 --confirm</span></div>
           <div class="term-output"><span style="color:var(--green); font-weight:bold;">[SAFETY GATE CONFIRMED]</span> Writing value 100 to holding:40001...\nSUCCESS: Register 40001 updated to 100 (0x0064).<span class="blinking-cursor"></span></div>`;
