@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📖 otcat Documentation & Driver Roadmap
+    url: https://github.com/QuitOperation/otcat/tree/main/docs
+    about: Read user guides, classic addressing docs, backoff mechanics, and driver implementation roadmap.
+  - name: 🛡️ Security Vulnerability Reporting
+    url: https://github.com/QuitOperation/otcat/blob/main/SECURITY.md
+    about: Report sensitive security vulnerabilities directly to maintainers.

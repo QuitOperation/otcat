@@ -1,0 +1,2033 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>otcat — the netcat for industrial I/O</title>
+  <meta name="description" content="Read, write, and watch PLC registers from the shell, the way nc lets you read, write, and watch a TCP socket. Modbus TCP, EtherNet/IP, S7comm, BACnet. Zero dependencies.">
+  <meta name="keywords" content="otcat, netcat, modbus, plc, industrial, automation, scada, s7comm, bacnet, ethernet-ip, go, python, cli">
+  <meta name="author" content="QuitOperation">
+  <link rel="canonical" href="https://quitoperation.github.io/otcat/">
+
+  <!-- Open Graph / Social Media Meta -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://quitoperation.github.io/otcat/">
+  <meta property="og:title" content="otcat — the netcat for industrial I/O">
+  <meta property="og:description" content="Read, write, and watch PLC registers directly from the command line. Single static binary, zero external dependencies.">
+  <meta property="og:image" content="../assets/otcat-dark.png">
+
+  <!-- Twitter Meta -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="otcat — the netcat for industrial I/O">
+  <meta name="twitter:description" content="Read, write, and watch PLC registers directly from the command line. Single static binary, zero external dependencies.">
+  <meta name="twitter:image" content="../assets/otcat-dark.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230b0c0e'/><text x='15' y='65' font-family='monospace' font-weight='bold' font-size='50' fill='%23ff4d00'>otc</text></svg>">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    /* Swiss Modern Geometric Responsive Design System */
+    :root[data-theme="light"] {
+      --bg: #f4f0ea;
+      --bg-card: #ffffff;
+      --bg-dark-card: #0e0f12;
+      --bg-banner: #16181d;
+      --bg-nav: rgba(244, 240, 234, 0.94);
+      --border: #d6d0c4;
+      --border-dark: #2a2e38;
+      --border-strong: #111111;
+      --text: #111111;
+      --text-muted: #555555;
+      --text-light: #f4f0ea;
+      --text-light-muted: #999999;
+      --orange: #ff4d00;
+      --orange-hover: #e04400;
+      --orange-subtle: rgba(255, 77, 0, 0.12);
+      --green: #10b981;
+      --blue: #0284c7;
+      --purple: #a855f7;
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+      --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.08);
+      --term-bg: #0b0c0e;
+      --term-text: #f4f0ea;
+      --focus-ring: #ff4d00;
+      --code-bg: rgba(0, 0, 0, 0.06);
+    }
+
+    :root[data-theme="dark"] {
+      --bg: #0b0c0e;
+      --bg-card: #13151a;
+      --bg-dark-card: #1c1f26;
+      --bg-banner: #14171e;
+      --bg-nav: rgba(11, 12, 14, 0.95);
+      --border: #242834;
+      --border-dark: #3a3f4d;
+      --border-strong: #ff4d00;
+      --text: #f4f0ea;
+      --text-muted: #a3a8b7;
+      --text-light: #f4f0ea;
+      --text-light-muted: #9499a6;
+      --orange: #ff4d00;
+      --orange-hover: #ff6622;
+      --orange-subtle: rgba(255, 77, 0, 0.22);
+      --green: #10b981;
+      --blue: #38bdf8;
+      --purple: #c084fc;
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+      --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.5);
+      --term-bg: #050607;
+      --term-text: #f4f0ea;
+      --focus-ring: #ff4d00;
+      --code-bg: rgba(255, 255, 255, 0.1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, sans-serif;
+      line-height: 1.6;
+      transition: background-color 0.3s ease, color 0.3s ease;
+      overflow-x: hidden;
+      width: 100%;
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--focus-ring);
+      outline-offset: 3px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      background: var(--code-bg);
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 0.9em;
+    }
+
+    /* Highlight Badges */
+    .hl-badge {
+      display: inline-block;
+      background-color: var(--orange);
+      color: #ffffff;
+      padding: 2px 10px;
+      font-weight: 700;
+      border-radius: 2px;
+    }
+
+    .hl-badge-dark {
+      display: inline-block;
+      background-color: #ffffff;
+      color: #000000;
+      padding: 2px 10px;
+      font-weight: 700;
+      border-radius: 2px;
+    }
+
+    .kbd-shortcut {
+      display: inline-block;
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 1px 5px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-left: 4px;
+    }
+
+    /* Animated Dynamic Logo */
+    .brand-logo-img {
+      height: 34px;
+      width: auto;
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), filter 0.35s ease;
+    }
+
+    .brand:hover .brand-logo-img {
+      transform: scale(1.08) rotate(-4deg);
+      filter: drop-shadow(0 4px 14px rgba(255, 77, 0, 0.45));
+    }
+
+    /* Header Navigation */
+    header {
+      background: var(--bg-nav);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-wrapper {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 72px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text);
+    }
+
+    .brand-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: -0.8px;
+    }
+
+    .brand-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      background: var(--text);
+      color: var(--bg);
+      padding: 2px 6px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    nav ul {
+      display: flex;
+      gap: 20px;
+      list-style: none;
+      align-items: center;
+    }
+
+    nav a {
+      color: var(--text);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 6px 10px;
+      border-radius: 4px;
+      transition: color 0.2s, background-color 0.2s;
+    }
+
+    nav a:hover, nav a.active {
+      color: var(--orange);
+      background-color: var(--orange-subtle);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .theme-toggle {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      width: 40px;
+      height: 40px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.25s ease;
+    }
+
+    .theme-toggle:hover {
+      border-color: var(--orange);
+      color: var(--orange);
+      background: var(--orange-subtle);
+    }
+
+    .btn-github {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--text);
+      color: var(--bg);
+      padding: 8px 16px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.2s;
+      border: 1px solid var(--text);
+    }
+
+    .btn-github:hover {
+      background: var(--orange);
+      color: #ffffff;
+      border-color: var(--orange);
+    }
+
+    /* Mobile Drawer Toggle & Smooth Transition */
+    .mobile-menu-btn {
+      display: none;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 10px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    .mobile-drawer {
+      position: fixed;
+      top: 72px;
+      left: 0;
+      width: 100%;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      box-shadow: var(--shadow-lg);
+      z-index: 99;
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+      transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease, padding 0.3s ease;
+    }
+
+    .mobile-drawer.open {
+      max-height: 380px;
+      opacity: 1;
+      padding: 24px;
+    }
+
+    .mobile-drawer ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .mobile-drawer a {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    /* Fluid Hero Section */
+    .hero {
+      padding: 90px 0 60px;
+    }
+
+    .hero-pretitle {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(1.3rem, 3.2vw, 2rem);
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 12px;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .hero-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(2.2rem, 5.5vw + 0.5rem, 4rem);
+      line-height: 1.12;
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      margin-bottom: 24px;
+      color: var(--text);
+      max-width: 1000px;
+      word-break: break-word;
+    }
+
+    .hero-subtitle {
+      font-size: clamp(1.05rem, 2vw + 0.4rem, 1.3rem);
+      color: var(--text-muted);
+      max-width: 780px;
+      margin-bottom: 38px;
+      font-weight: 500;
+      line-height: 1.65;
+    }
+
+    .blinking-cursor {
+      display: inline-block;
+      width: 10px;
+      height: 1.1em;
+      background: var(--orange);
+      margin-left: 4px;
+      vertical-align: middle;
+      animation: blink 1s step-start infinite;
+    }
+
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 40px;
+    }
+
+    .btn-hero-primary {
+      background: var(--orange);
+      color: #ffffff;
+      font-weight: 700;
+      padding: 14px 28px;
+      font-size: 0.98rem;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-hero-primary:hover {
+      background: var(--orange-hover);
+      transform: translateY(-2px);
+    }
+
+    .btn-hero-secondary {
+      background: var(--bg-card);
+      color: var(--text);
+      font-weight: 700;
+      padding: 14px 28px;
+      font-size: 0.98rem;
+      text-decoration: none;
+      border: 1px solid var(--border-strong);
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-hero-secondary:hover {
+      background: var(--text);
+      color: var(--bg);
+      transform: translateY(-2px);
+    }
+
+    .hero-cmd-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-strong);
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      max-width: 780px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .hero-cmd-box code {
+      color: var(--text);
+      font-weight: 600;
+      word-break: break-all;
+      background: transparent;
+      padding: 0;
+    }
+
+    .btn-copy {
+      background: var(--text);
+      color: var(--bg);
+      border: none;
+      padding: 8px 16px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-copy:hover {
+      background: var(--orange);
+      color: #ffffff;
+    }
+
+    /* Section Rhythm Spacing */
+    .section-spacing-lg { margin-bottom: 110px; }
+    .section-spacing-md { margin-bottom: 85px; }
+    .section-spacing-sm { margin-bottom: 60px; }
+
+    /* Section Subheaders */
+    .section-header-editorial {
+      margin-bottom: 36px;
+    }
+
+    .section-header-editorial h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(1.6rem, 3.5vw + 0.5rem, 2.5rem);
+      font-weight: 800;
+      letter-spacing: -1px;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    .section-header-editorial p {
+      font-size: 1.08rem;
+      color: var(--text-muted);
+    }
+
+    /* Package Managers Installation Section */
+    .install-card-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 32px 24px;
+    }
+
+    .pkg-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .pkg-tab-btn {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 18px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex: 1 1 auto;
+      text-align: center;
+    }
+
+    .pkg-tab-btn.active, .pkg-tab-btn:hover {
+      background: var(--orange);
+      color: #ffffff;
+      border-color: var(--orange);
+    }
+
+    .pkg-cmd-display {
+      background: var(--term-bg);
+      border: 1px solid var(--border-dark);
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .pkg-cmd-display code {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--orange);
+      font-size: 1rem;
+      word-break: break-all;
+      background: transparent;
+    }
+
+    /* Python Binding Section with Text Editor Line Rows */
+    .code-window-header {
+      background: #191c24;
+      border: 1px solid var(--border-dark);
+      border-bottom: none;
+      border-top-left-radius: 4px;
+      border-top-right-radius: 4px;
+      padding: 10px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: #a0a5b1;
+    }
+
+    .code-window-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      color: #f4f0ea;
+    }
+
+    .python-code-box {
+      background: var(--term-bg);
+      border: 1px solid var(--border-dark);
+      border-bottom-left-radius: 4px;
+      border-bottom-right-radius: 4px;
+      padding: 16px 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      color: var(--term-text);
+      line-height: 1.7;
+      overflow-x: auto;
+    }
+
+    .editor-row {
+      display: flex;
+      padding: 0 16px;
+      transition: background-color 0.15s ease;
+    }
+
+    .editor-row:hover {
+      background-color: rgba(255, 255, 255, 0.04);
+    }
+
+    .line-num {
+      width: 38px;
+      color: #4a5264;
+      user-select: none;
+      text-align: right;
+      padding-right: 18px;
+      flex-shrink: 0;
+      font-size: 0.85rem;
+    }
+
+    .line-text {
+      flex: 1;
+      white-space: pre;
+      color: #e2e8f0;
+    }
+
+    .py-kw { color: #f472b6; font-weight: 600; }
+    .py-imp { color: #38bdf8; }
+    .py-fn { color: #38bdf8; font-weight: 500; }
+    .py-str { color: #10b981; }
+    .py-num { color: #f59e0b; }
+    .py-cmt { color: #64748b; font-style: italic; }
+
+    /* 3-Column Swiss Grid with SVG Card Icons */
+    .grid-3-col {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+
+    .col-card {
+      background: var(--bg-card);
+      padding: 36px 30px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 280px;
+      transition: transform 0.3s ease, background-color 0.3s ease;
+    }
+
+    .col-card:hover {
+      transform: translateY(-4px);
+    }
+
+    .col-card-dark {
+      background: var(--bg-dark-card);
+      color: var(--text-light);
+    }
+
+    .col-card-dark .card-subtitle {
+      color: var(--text-light-muted);
+    }
+
+    .card-icon {
+      width: 42px;
+      height: 42px;
+      margin-bottom: 20px;
+      color: var(--orange);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.76rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+
+    .card-label-orange {
+      color: var(--orange);
+    }
+
+    .card-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 14px;
+      letter-spacing: -0.5px;
+    }
+
+    .card-subtitle {
+      font-size: 0.96rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* Repository GIFs Showcase Gallery Section */
+    .gif-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .gif-tab-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 12px 22px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.92rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex: 1 1 auto;
+      text-align: center;
+    }
+
+    .gif-tab-btn.active, .gif-tab-btn:hover {
+      background: var(--orange);
+      color: #ffffff;
+      border-color: var(--orange);
+    }
+
+    .gif-display-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-strong);
+      padding: 20px;
+      text-align: center;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .gif-display-card img {
+      width: 100%;
+      max-width: 100%;
+      height: auto;
+      border: 1px solid var(--border);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      object-fit: contain;
+    }
+
+    .gif-caption {
+      margin-top: 14px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+    }
+
+    /* Hardened Visual Command Builder Section & Select Option Styling */
+    .builder-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 32px 24px;
+    }
+
+    .builder-form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+
+    .form-ctrl-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-ctrl-group label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .form-ctrl-input {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88rem;
+      outline: none;
+      width: 100%;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-ctrl-input option {
+      background: var(--bg-card);
+      color: var(--text);
+    }
+
+    .form-ctrl-input:focus {
+      border-color: var(--orange);
+      box-shadow: 0 0 0 3px var(--orange-subtle);
+    }
+
+    .builder-output-bar {
+      background: var(--term-bg);
+      border: 1px solid var(--border-dark);
+      padding: 18px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+
+    .builder-output-bar code {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--orange);
+      font-size: 0.95rem;
+      word-break: break-all;
+      background: transparent;
+    }
+
+    /* Split Feature Section */
+    .split-feature-section {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 40px;
+      align-items: center;
+    }
+
+    .split-text h3 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(1.6rem, 3.5vw + 0.5rem, 2.4rem);
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.8px;
+      margin-bottom: 18px;
+      color: var(--text);
+    }
+
+    .split-text p {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+
+    /* Terminal Simulator Styling */
+    .terminal-window {
+      background: var(--term-bg);
+      border: 1px solid var(--border-dark);
+      border-radius: 4px;
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      width: 100%;
+    }
+
+    .terminal-header {
+      background: #14161b;
+      border-bottom: 1px solid #22252e;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .terminal-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+    .dot-red { background: #ff5f56; }
+    .dot-yellow { background: #ffbd2e; }
+    .dot-green { background: #27c93f; }
+
+    .terminal-tabs {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: #888888;
+      padding: 4px 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active, .tab-btn:hover {
+      color: var(--orange);
+      border-bottom-color: var(--orange);
+      background: rgba(255, 77, 0, 0.08);
+    }
+
+    .btn-term-clear {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #aaaaaa;
+      padding: 3px 8px;
+      font-size: 0.75rem;
+      font-family: 'JetBrains Mono', monospace;
+      cursor: pointer;
+    }
+
+    .terminal-body {
+      padding: 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88rem;
+      min-height: 260px;
+      max-height: 380px;
+      overflow-y: auto;
+      color: var(--term-text);
+      line-height: 1.7;
+    }
+
+    .term-prompt {
+      color: var(--green);
+      margin-right: 10px;
+      font-weight: 700;
+    }
+
+    .term-cmd {
+      color: #ffffff;
+      font-weight: 600;
+      word-break: break-all;
+    }
+
+    .term-output {
+      color: #a0a5b1;
+      white-space: pre-wrap;
+      margin-left: 20px;
+      margin-bottom: 12px;
+      word-break: break-word;
+    }
+
+    .json-key { color: var(--orange); }
+    .json-val { color: var(--blue); }
+    .json-num { color: var(--green); }
+
+    /* High Contrast Dark Mode Full-Width Banner */
+    .banner-dark-full {
+      background: var(--bg-banner);
+      color: var(--text-light);
+      padding: 70px 0;
+      border-top: 1px solid var(--border-dark);
+      border-bottom: 1px solid var(--border-dark);
+      position: relative;
+    }
+
+    .banner-dark-full::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(90deg, var(--orange), transparent);
+    }
+
+    .banner-content {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 40px;
+      align-items: center;
+    }
+
+    .banner-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(1.8rem, 4vw + 0.5rem, 3.2rem);
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -1px;
+    }
+
+    .banner-text {
+      font-size: 1.1rem;
+      color: var(--text-light-muted);
+      line-height: 1.65;
+    }
+
+    /* Live Modbus Register Address Converter with Focus Glow */
+    .tool-box-editorial {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 36px 28px;
+    }
+
+    .converter-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 36px;
+      align-items: center;
+    }
+
+    .converter-input-group label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .converter-input-editorial {
+      width: 100%;
+      background: var(--bg);
+      border: 2px solid var(--border-strong);
+      padding: 16px 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text);
+      outline: none;
+      transition: all 0.25s ease;
+    }
+
+    .converter-input-editorial:focus {
+      border-color: var(--orange);
+      box-shadow: 0 0 0 4px var(--orange-subtle), 0 0 20px rgba(255, 77, 0, 0.25);
+    }
+
+    .converter-results-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .res-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      padding: 18px;
+    }
+
+    .res-card .res-lbl {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .res-card .res-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.08rem;
+      font-weight: 800;
+      color: var(--orange);
+      word-break: break-word;
+    }
+
+    /* Stat Counters Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 32px;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 48px 0;
+      text-align: center;
+    }
+
+    .stat-number {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(2.8rem, 5vw, 4.2rem);
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 8px;
+      letter-spacing: -2px;
+      color: var(--text);
+    }
+
+    .stat-label {
+      font-size: 0.98rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    /* FAQ Accordion Section */
+    .faq-item {
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .faq-header {
+      display: flex;
+      align-items: center;
+      padding: 22px 0;
+      cursor: pointer;
+      user-select: none;
+      gap: 16px;
+    }
+
+    .faq-indicator {
+      width: 10px;
+      height: 20px;
+      background-color: var(--orange);
+      flex-shrink: 0;
+    }
+
+    .faq-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      flex-grow: 1;
+      color: var(--text);
+    }
+
+    .faq-toggle-icon {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .faq-body {
+      padding: 0 0 24px 26px;
+      color: var(--text-muted);
+      font-size: 1.02rem;
+      display: none;
+      line-height: 1.7;
+    }
+
+    .faq-item.open .faq-body {
+      display: block;
+    }
+
+    /* Fixed Scroll Reveal Animations with Smooth State Transition */
+    .reveal {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: opacity, transform;
+    }
+
+    .reveal.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Floating Back-to-Top Button */
+    .btn-top {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      width: 46px;
+      height: 46px;
+      background: var(--orange);
+      color: #ffffff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 16px rgba(255, 77, 0, 0.35);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      z-index: 90;
+    }
+
+    .btn-top.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .btn-top:hover {
+      transform: translateY(-3px);
+      background: var(--orange-hover);
+    }
+
+    /* Bottom Dark CTA Banner */
+    .bottom-cta-banner {
+      background: var(--bg-banner);
+      color: var(--text-light);
+      padding: 52px 32px;
+      border: 1px solid var(--border-dark);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .bottom-cta-banner h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(1.8rem, 4vw + 0.5rem, 3rem);
+      font-weight: 800;
+      letter-spacing: -1px;
+    }
+
+    .bottom-cmd-form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      max-width: 680px;
+    }
+
+    .bottom-cmd-input {
+      flex: 1 1 280px;
+      background: #000000;
+      border: 1px solid var(--border-dark);
+      color: #ffffff;
+      padding: 14px 18px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88rem;
+    }
+
+    .bottom-cmd-btn {
+      background: var(--orange);
+      color: #ffffff;
+      border: none;
+      padding: 14px 24px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .bottom-cmd-btn:hover {
+      background: var(--orange-hover);
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 40px 0;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .footer-wrapper {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 20px;
+      list-style: none;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .footer-links a:hover {
+      color: var(--orange);
+    }
+
+    /* Responsive Breakpoints Hardening */
+    @media (max-width: 900px) {
+      .split-feature-section { grid-template-columns: 1fr; }
+      .banner-content { grid-template-columns: 1fr; }
+      .converter-grid { grid-template-columns: 1fr; }
+      nav ul { display: none; }
+      .mobile-menu-btn { display: block; }
+    }
+
+    @media (max-width: 550px) {
+      .btn-hero-primary, .btn-hero-secondary { width: 100%; justify-content: center; }
+      .hero-cmd-box { flex-direction: column; align-items: stretch; text-align: center; }
+      .btn-copy { width: 100%; }
+      .converter-results-grid { grid-template-columns: 1fr; }
+      .bottom-cmd-form { flex-direction: column; }
+      .bottom-cmd-input, .bottom-cmd-btn { width: 100%; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Floating Back-to-Top Button -->
+  <button id="btn-top" class="btn-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" aria-label="Back to top" title="Back to top">
+    <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 15l7-7 7 7"/></svg>
+  </button>
+
+  <!-- Header -->
+  <header>
+    <div class="container nav-wrapper">
+      <a href="#" class="brand" aria-label="otcat homepage">
+        <!-- Dynamic Animated Logo -->
+        <img id="brand-logo" class="brand-logo-img" src="../assets/otcat-light.png" alt="otcat industrial logo" onerror="handleLogoFallback(this)">
+        <span class="brand-title">otcat</span>
+        <span class="brand-tag">v0.1.0</span>
+        <span class="brand-tag" style="background:var(--orange); color:#ffffff;" title="Includes otc short binary alias">otc alias</span>
+      </a>
+
+      <nav aria-label="Desktop navigation">
+        <ul id="desktop-nav-links">
+          <li><a href="#about">About</a></li>
+          <li><a href="#install">Install</a></li>
+          <li><a href="#python">Python Lib</a></li>
+          <li><a href="#demos">Field Demos</a></li>
+          <li><a href="#builder">Command Builder</a></li>
+          <li><a href="#converter">Converter</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-actions">
+        <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle Light and Dark Mode" title="Toggle Theme (T)">
+          <svg id="theme-icon" width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/></svg>
+        </button>
+
+        <a href="https://github.com/QuitOperation/otcat" target="_blank" class="btn-github" aria-label="View otcat source code on GitHub">
+          <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          GitHub
+        </a>
+
+        <button class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Toggle mobile menu">☰</button>
+      </div>
+    </div>
+
+    <!-- Mobile Drawer Menu with Smooth Transition -->
+    <div id="mobile-drawer" class="mobile-drawer">
+      <ul>
+        <li><a href="#about" onclick="toggleMobileMenu()">About</a></li>
+        <li><a href="#install" onclick="toggleMobileMenu()">Install</a></li>
+        <li><a href="#python" onclick="toggleMobileMenu()">Python Lib</a></li>
+        <li><a href="#demos" onclick="toggleMobileMenu()">Field Demos</a></li>
+        <li><a href="#builder" onclick="toggleMobileMenu()">Command Builder</a></li>
+        <li><a href="#converter" onclick="toggleMobileMenu()">Converter</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <main>
+    <!-- Editorial Hero Section -->
+    <section class="hero container reveal">
+      <div class="hero-pretitle">
+        <span>netcat for <span class="hl-badge">industrial I/O</span></span>
+        <span class="kbd-shortcut" title="Press T to toggle theme">Press [T] for Theme</span>
+      </div>
+      <h1 class="hero-title">70% of field troubleshooting is reading registers. Leave it to <span class="hl-badge">otcat.</span></h1>
+      <p class="hero-subtitle">Read, write, and watch PLC registers directly from the command line using <code>otcat</code> (or short binary alias <code>otc</code>), the way <code>nc</code> lets you inspect a TCP socket. Zero external dependencies, single static binary.<span class="blinking-cursor"></span></p>
+
+      <div class="hero-buttons">
+        <a href="#install" class="btn-hero-primary">Install Packages →</a>
+        <a href="#python" class="btn-hero-secondary">Python Library</a>
+      </div>
+
+      <div class="hero-cmd-box">
+        <code>go install github.com/QuitOperation/otcat/cmd/otc@latest</code>
+        <button class="btn-copy" onclick="copyText('go install github.com/QuitOperation/otcat/cmd/otc@latest', this)">Copy</button>
+      </div>
+    </section>
+
+    <!-- Package Manager Installation Section -->
+    <section id="install" class="container reveal section-spacing-lg">
+      <div class="section-header-editorial">
+        <h2>Install via <span class="hl-badge">Package Managers</span></h2>
+        <p>Native package distribution for Debian/Ubuntu, Fedora/RHEL, Alpine Linux, Python PyPI, and Go.</p>
+      </div>
+
+      <div class="install-card-box">
+        <div class="pkg-tabs" role="tablist">
+          <button class="pkg-tab-btn active" role="tab" aria-selected="true" onclick="switchPkg('apt', this)">Debian / Ubuntu (APT)</button>
+          <button class="pkg-tab-btn" role="tab" aria-selected="false" onclick="switchPkg('dnf', this)">Fedora / RHEL (DNF)</button>
+          <button class="pkg-tab-btn" role="tab" aria-selected="false" onclick="switchPkg('apk', this)">Alpine Linux (APK)</button>
+          <button class="pkg-tab-btn" role="tab" aria-selected="false" onclick="switchPkg('pip', this)">Python PyPI (pip)</button>
+          <button class="pkg-tab-btn" role="tab" aria-selected="false" onclick="switchPkg('go', this)">Go Toolchain</button>
+        </div>
+
+        <div class="pkg-cmd-display">
+          <code id="pkg-cmd-code">sudo apt install -y otcat</code>
+          <button class="btn-copy" onclick="copyText(document.getElementById('pkg-cmd-code').innerText, this)">Copy Command</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Python Library Showcase Section -->
+    <section id="python" class="container reveal section-spacing-lg">
+      <div class="section-header-editorial">
+        <h2>Official <span class="hl-badge">Python Library</span></h2>
+        <p>Python bindings wrapping the compiled Go core binary with zero extra dependencies.</p>
+      </div>
+
+      <div class="install-card-box">
+        <div class="pkg-cmd-display" style="margin-bottom: 20px;">
+          <code>pip install otcat</code>
+          <button class="btn-copy" onclick="copyText('pip install otcat', this)">Copy Pip Install</button>
+        </div>
+
+        <div class="code-window-header">
+          <div class="code-window-title">
+            <svg width="16" height="16" fill="var(--orange)" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            example.py — Python 3.9+ Bindings
+          </div>
+          <div style="color: var(--orange); font-weight: 700; font-size: 0.78rem;">otcat.Client</div>
+        </div>
+        <div class="python-code-box">
+          <div class="editor-row"><span class="line-num">1</span><span class="line-text"><span class="py-kw">from</span> otcat <span class="py-kw">import</span> Client</span></div>
+          <div class="editor-row"><span class="line-num">2</span><span class="line-text"></span></div>
+          <div class="editor-row"><span class="line-num">3</span><span class="line-text"><span class="py-cmt"># Connect directly to target PLC or Modbus TCP gateway</span></span></div>
+          <div class="editor-row"><span class="line-num">4</span><span class="line-text">c = <span class="py-fn">Client</span>(<span class="py-str">"192.168.1.10:502"</span>)</span></div>
+          <div class="editor-row"><span class="line-num">5</span><span class="line-text"></span></div>
+          <div class="editor-row"><span class="line-num">6</span><span class="line-text"><span class="py-cmt"># Read holding register 40001</span></span></div>
+          <div class="editor-row"><span class="line-num">7</span><span class="line-text">val = c.<span class="py-fn">read</span>(<span class="py-str">"holding:40001"</span>)</span></div>
+          <div class="editor-row"><span class="line-num">8</span><span class="line-text"><span class="py-fn">print</span>(val.value, val.quality, val.ts)</span></div>
+          <div class="editor-row"><span class="line-num">9</span><span class="line-text"></span></div>
+          <div class="editor-row"><span class="line-num">10</span><span class="line-text"><span class="py-cmt"># Live watch stream for real-time telemetry analytics</span></span></div>
+          <div class="editor-row"><span class="line-num">11</span><span class="line-text"><span class="py-kw">for</span> item <span class="py-kw">in</span> c.<span class="py-fn">watch</span>(<span class="py-str">"holding:40001"</span>, interval=<span class="py-str">"500ms"</span>, count=<span class="py-num">10</span>):</span></div>
+          <div class="editor-row"><span class="line-num">12</span><span class="line-text">    <span class="py-fn">print</span>(item.ts, item.value)</span></div>
+          <div class="editor-row"><span class="line-num">13</span><span class="line-text"></span></div>
+          <div class="editor-row"><span class="line-num">14</span><span class="line-text"><span class="py-cmt"># Write register setpoint value (confirm=True by default for safety)</span></span></div>
+          <div class="editor-row"><span class="line-num">15</span><span class="line-text">c.<span class="py-fn">write</span>(<span class="py-str">"holding:40001"</span>, <span class="py-num">100</span>)</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 Column Swiss Modular Grid with Icons -->
+    <section id="about" class="container reveal section-spacing-lg">
+      <div class="section-header-editorial">
+        <h2>What is <span class="hl-badge">otcat</span></h2>
+        <p>A single static Go binary designed for automation engineers, OT security, and shell scriptability.</p>
+      </div>
+
+      <div class="grid-3-col">
+        <div class="col-card col-card-dark">
+          <div>
+            <div class="card-icon">
+              <svg width="36" height="36" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </div>
+            <div class="card-label card-label-orange">FOR AUTOMATION & SCADA</div>
+            <h3 class="card-title">Direct PLC Register Diagnostics</h3>
+            <p class="card-subtitle">Query Modbus holding registers, coils, and discrete inputs directly from standard terminal shell sessions.</p>
+          </div>
+        </div>
+
+        <div class="col-card">
+          <div>
+            <div class="card-icon" style="color: var(--text);">
+              <svg width="36" height="36" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            </div>
+            <div class="card-label">FOR FIELD TECHS</div>
+            <h3 class="card-title">Zero Vendor Software Required</h3>
+            <p class="card-subtitle">Ditch multi-gigabyte proprietary vendor clients. Read raw numbers or structured JSON in under 5ms.</p>
+          </div>
+        </div>
+
+        <div class="col-card">
+          <div>
+            <div class="card-icon" style="color: var(--text);">
+              <svg width="36" height="36" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 17l6-6-6-6M12 19h8"/></svg>
+            </div>
+            <div class="card-label">FOR DEVOPS & CI</div>
+            <h3 class="card-title">Unix Pipe Composition</h3>
+            <p class="card-subtitle">Pipe register values directly into <code>awk</code>, <code>jq</code>, or <code>tee</code> for instant automated field logging.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Repository GIFs Showcase Section -->
+    <section id="demos" class="container gif-showcase-section reveal section-spacing-lg">
+      <div class="section-header-editorial">
+        <h2>Field Terminal <span class="hl-badge">GIF Demos</span></h2>
+        <p>Recorded live terminal sessions of otcat executing Modbus operations and AWK pipelines.</p>
+      </div>
+
+      <div class="gif-tabs" role="tablist">
+        <button class="gif-tab-btn active" role="tab" aria-selected="true" onclick="switchGif('quickstart', this)">1. Quickstart Read</button>
+        <button class="gif-tab-btn" role="tab" aria-selected="false" onclick="switchGif('pipes', this)">2. Unix AWK Piping</button>
+        <button class="gif-tab-btn" role="tab" aria-selected="false" onclick="switchGif('write_safety', this)">3. Write Safety Gate</button>
+      </div>
+
+      <div class="gif-display-card">
+        <img id="demo-gif-img" src="../demo/gifs/quickstart.gif" alt="otcat quickstart demo recording showing JSON output" onerror="handleGifFallback(this)">
+        <div class="gif-caption" id="demo-gif-caption">otcat quickstart: reading holding register 40001 as JSON</div>
+      </div>
+    </section>
+
+    <!-- Hardened Visual Command Builder Section -->
+    <section id="builder" class="container reveal section-spacing-lg">
+      <div class="section-header-editorial">
+        <h2>Visual <span class="hl-badge">Command Builder</span></h2>
+        <p>Visually configure CLI flags and execute them directly in the terminal simulator.</p>
+      </div>
+
+      <div class="builder-box">
+        <div class="builder-form-grid">
+          <div class="form-ctrl-group">
+            <label for="cfg-proto">Protocol Driver</label>
+            <select id="cfg-proto" class="form-ctrl-input" onchange="updateBuilder()">
+              <option value="--modbus">Modbus TCP (--modbus)</option>
+              <option value="--eip">EtherNet/IP (--eip)</option>
+              <option value="--s7comm">S7comm (--s7comm)</option>
+              <option value="--bacnet">BACnet/IP (--bacnet)</option>
+            </select>
+          </div>
+
+          <div class="form-ctrl-group">
+            <label for="cfg-host">Host & Port</label>
+            <input type="text" id="cfg-host" class="form-ctrl-input" value="192.168.1.10:502" oninput="updateBuilder()">
+          </div>
+
+          <div class="form-ctrl-group">
+            <label for="cfg-op">Operation Mode</label>
+            <select id="cfg-op" class="form-ctrl-input" onchange="updateBuilder()">
+              <option value="--read">--read (Single Query)</option>
+              <option value="--watch">--watch (Live Telemetry)</option>
+              <option value="--write">--write (Write Register)</option>
+            </select>
+          </div>
+
+          <div class="form-ctrl-group">
+            <label for="cfg-addr">Register Spec</label>
+            <input type="text" id="cfg-addr" class="form-ctrl-input" value="holding:40001" oninput="updateBuilder()">
+          </div>
+
+          <div class="form-ctrl-group">
+            <label for="cfg-fmt">Output Format</label>
+            <select id="cfg-fmt" class="form-ctrl-input" onchange="updateBuilder()">
+              <option value="--json">--json (Structured JSON)</option>
+              <option value="--raw">--raw (Bare Value)</option>
+            </select>
+          </div>
+
+          <div class="form-ctrl-group">
+            <label for="cfg-safety">Safety Confirmation</label>
+            <select id="cfg-safety" class="form-ctrl-input" onchange="updateBuilder()">
+              <option value="--confirm">--confirm (Gate Required)</option>
+              <option value="">None (Default Gate)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="builder-output-bar">
+          <code id="builder-cmd">otcat --modbus 192.168.1.10:502 --read holding:40001 --json --confirm</code>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button class="btn-copy" onclick="executeCustomCmd()">Run in Terminal</button>
+            <button class="btn-copy" onclick="copyText(document.getElementById('builder-cmd').innerText, this)">Copy Command</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Split Interactive Feature Section -->
+    <section id="simulator" class="container reveal section-spacing-lg">
+      <div class="split-feature-section">
+        <div class="split-text">
+          <h3>Read, watch & write from <span class="hl-badge">simply standard shell</span></h3>
+          <p>No GUI overhead. Run single-shot queries or continuous live telemetry watch streams with jittered exponential backoff for field resilience.</p>
+          
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; border-left: 3px solid var(--orange); padding-left: 16px;">
+            <strong>Quick Tip:</strong> Use <code>otc</code> as a short binary alias for maximum shell typing speed.
+          </div>
+        </div>
+
+        <!-- Interactive Terminal Simulator with Cursor -->
+        <div class="terminal-window">
+          <div class="terminal-header">
+            <div class="terminal-dots">
+              <div class="dot dot-red"></div>
+              <div class="dot dot-yellow"></div>
+              <div class="dot dot-green"></div>
+            </div>
+            <div class="terminal-tabs" role="tablist">
+              <button class="tab-btn active" role="tab" aria-selected="true" onclick="runDemo('read_json', this)">Read JSON</button>
+              <button class="tab-btn" role="tab" aria-selected="false" onclick="runDemo('watch_mode', this)">Live Watch</button>
+              <button class="tab-btn" role="tab" aria-selected="false" onclick="runDemo('write_confirm', this)">Write Gate</button>
+            </div>
+            <button class="btn-term-clear" onclick="clearTerminal()">Clear</button>
+          </div>
+          <div class="terminal-body" id="term-body">
+            <div class="term-line">
+              <span class="term-prompt">$</span>
+              <span class="term-cmd">otcat --modbus 192.168.1.10:502 --read holding:40001 --json</span>
+            </div>
+            <div class="term-output">{
+  <span class="json-key">"address"</span>: <span class="json-val">"holding:40001"</span>,
+  <span class="json-key">"table"</span>: <span class="json-val">"holding"</span>,
+  <span class="json-key">"offset"</span>: <span class="json-num">0</span>,
+  <span class="json-key">"value"</span>: <span class="json-num">12450</span>,
+  <span class="json-key">"status"</span>: <span class="json-val">"OK"</span>
+}<span class="blinking-cursor"></span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Full-Width Inverted Dark Banner -->
+    <section class="banner-dark-full reveal section-spacing-lg">
+      <div class="container banner-content">
+        <h2 class="banner-title">You pay for the <span class="hl-badge-dark">reliability</span>, not the <span class="hl-badge">vendor bloat</span>.</h2>
+        <p class="banner-text">Industrial controllers deserve the same simple, dependable networking tools we have used on TCP sockets for decades. Built entirely with Go standard library.</p>
+      </div>
+    </section>
+
+    <!-- Live Modbus Register Address Converter -->
+    <section id="converter" class="container reveal section-spacing-lg">
+      <div class="section-header-editorial">
+        <h2>Interactive <span class="hl-badge">Address Converter</span></h2>
+        <p>Convert 5-digit Modbus addresses to 0-indexed hex offsets and protocol function codes.</p>
+      </div>
+
+      <div class="tool-box-editorial">
+        <div class="converter-grid">
+          <div class="converter-input-group">
+            <label for="mb-input">Modbus Address (40001, 30005, 00001, 10010)</label>
+            <input type="text" id="mb-input" class="converter-input-editorial" value="40001" oninput="convertModbus()">
+          </div>
+          <div class="converter-results-grid">
+            <div class="res-card">
+              <div class="res-lbl">Data Table</div>
+              <div class="res-val" id="res-table">Holding Registers</div>
+            </div>
+            <div class="res-card">
+              <div class="res-lbl">0-Indexed Offset</div>
+              <div class="res-val" id="res-offset">0x0000 (0)</div>
+            </div>
+            <div class="res-card">
+              <div class="res-lbl">Function Code</div>
+              <div class="res-val" id="res-fc">FC03 (Read)</div>
+            </div>
+            <div class="res-card">
+              <div class="res-lbl">otcat CLI Flag</div>
+              <div class="res-val" id="res-flag">holding:40001</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stat Counters Grid -->
+    <section class="container reveal section-spacing-lg">
+      <div class="stats-grid">
+        <div>
+          <div class="stat-number">0</div>
+          <div class="stat-label">Third-party external Go dependencies</div>
+        </div>
+        <div>
+          <div class="stat-number">100%</div>
+          <div class="stat-label">Standard library Go code compliance</div>
+        </div>
+        <div>
+          <div class="stat-number">&lt; 5ms</div>
+          <div class="stat-label">Average Modbus TCP register query latency</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ Accordion Section -->
+    <section id="faq" class="container faq-section reveal section-spacing-lg">
+      <div class="section-header-editorial">
+        <h2>Frequently Asked <span class="hl-badge">Questions</span></h2>
+        <p>Everything you need to know about using otcat in industrial environments.</p>
+      </div>
+
+      <div class="faq-item open">
+        <div class="faq-header" tabindex="0" role="button" aria-expanded="true" onclick="toggleFaq(this)" onkeydown="if(event.key==='Enter'||event.key===' ')toggleFaq(this)">
+          <div class="faq-indicator"></div>
+          <div class="faq-title">What protocols are currently supported in otcat?</div>
+          <div class="faq-toggle-icon">−</div>
+        </div>
+        <div class="faq-body">
+          Modbus TCP is completely implemented across all four data tables (coils, discrete inputs, holding registers, input registers), supporting both classic <code>40001</code>-style addressing and zero-based offsets. EtherNet/IP, S7comm, and BACnet CLI flags are registered and on the active roadmap.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-header" tabindex="0" role="button" aria-expanded="false" onclick="toggleFaq(this)" onkeydown="if(event.key==='Enter'||event.key===' ')toggleFaq(this)">
+          <div class="faq-indicator"></div>
+          <div class="faq-title">Is it safe to use otcat write commands on live physical PLCs?</div>
+          <div class="faq-toggle-icon">+</div>
+        </div>
+        <div class="faq-body">
+          Yes, otcat requires explicit safety confirmation gates (<code>--confirm</code>) or stdin piping flags (<code>--from-stdin</code>) before sending any write PDU to a controller, preventing accidental register writes.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-header" tabindex="0" role="button" aria-expanded="false" onclick="toggleFaq(this)" onkeydown="if(event.key==='Enter'||event.key===' ')toggleFaq(this)">
+          <div class="faq-indicator"></div>
+          <div class="faq-title">What is the difference between otcat and otc?</div>
+          <div class="faq-toggle-icon">+</div>
+        </div>
+        <div class="faq-body">
+          <code>otc</code> is simply <code>otcat</code> compiled under its short name, giving you identical flags and behavior while saving characters when typing in terminal field sessions.
+        </div>
+      </div>
+    </section>
+
+    <!-- Bottom Dark CTA Banner -->
+    <section class="container reveal section-spacing-md">
+      <div class="bottom-cta-banner">
+        <h2>Once your backlog starts, start with <span class="hl-badge">otcat</span>.</h2>
+        <p style="color: #a0a5b1; font-size: 1.1rem;">Install the binary using Go or download prebuilt releases for Linux, macOS, or Windows.</p>
+        <div class="bottom-cmd-form">
+          <input type="text" class="bottom-cmd-input" value="go install github.com/QuitOperation/otcat/cmd/otc@latest" readonly aria-label="Go install command">
+          <button class="bottom-cmd-btn" onclick="copyText('go install github.com/QuitOperation/otcat/cmd/otc@latest', this)">Copy Install</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container footer-wrapper">
+      <div>
+        <strong>otcat</strong> — Created by QuitOperation. MIT License.
+      </div>
+      <ul class="footer-links">
+        <li><a href="https://github.com/QuitOperation/otcat/blob/main/LICENSE">MIT License</a></li>
+        <li><a href="https://github.com/QuitOperation/otcat/blob/main/CODE_OF_CONDUCT.md">Code of Conduct</a></li>
+        <li><a href="https://github.com/QuitOperation/otcat/blob/main/CONTRIBUTING.md">Contributing</a></li>
+        <li><a href="https://github.com/QuitOperation/otcat/blob/main/SECURITY.md">Security</a></li>
+      </ul>
+    </div>
+  </footer>
+
+  <script>
+    // Theme Switcher & Dynamic Animated Logo Handler
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('otcat-theme', next);
+      updateThemeIcon(next);
+      updateLogo(next);
+    }
+
+    function updateThemeIcon(theme) {
+      const icon = document.getElementById('theme-icon');
+      if (theme === 'dark') {
+        icon.innerHTML = '<path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/>';
+      } else {
+        icon.innerHTML = '<path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41l-1.06-1.06zM7.05 18.36l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.39-.39.39-1.03 0-1.41s-1.03-.39-1.41 0zM18.36 5.99l1.06-1.06c.39-.39.39-1.03 0-1.41s-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0z"/>';
+      }
+    }
+
+    function updateLogo(theme) {
+      const logo = document.getElementById('brand-logo');
+      if (theme === 'dark') {
+        logo.src = '../assets/otcat-dark.png';
+      } else {
+        logo.src = '../assets/otcat-light.png';
+      }
+    }
+
+    function handleLogoFallback(img) {
+      const theme = document.documentElement.getAttribute('data-theme') || 'light';
+      if (theme === 'dark') {
+        img.src = 'assets/otcat-dark.png';
+      } else {
+        img.src = 'assets/otcat-light.png';
+      }
+    }
+
+    function handleGifFallback(img) {
+      const currentSrc = img.getAttribute('src');
+      if (currentSrc && currentSrc.startsWith('../')) {
+        img.src = currentSrc.substring(3);
+      }
+    }
+
+    function toggleMobileMenu() {
+      const drawer = document.getElementById('mobile-drawer');
+      drawer.classList.toggle('open');
+    }
+
+    // Keyboard Shortcuts (T for theme)
+    document.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+      if (e.key === 't' || e.key === 'T') {
+        toggleTheme();
+      }
+    });
+
+    // Initialize Theme
+    const savedTheme = localStorage.getItem('otcat-theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeIcon(savedTheme);
+    updateLogo(savedTheme);
+
+    // Package Manager Tab Switcher
+    function switchPkg(pkg, btn) {
+      document.querySelectorAll('.pkg-tab-btn').forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-selected', 'false');
+      });
+      btn.classList.add('active');
+      btn.setAttribute('aria-selected', 'true');
+
+      const cmdCode = document.getElementById('pkg-cmd-code');
+      if (pkg === 'apt') {
+        cmdCode.innerText = 'sudo apt install -y otcat';
+      } else if (pkg === 'dnf') {
+        cmdCode.innerText = 'sudo dnf install -y --nogpgcheck otcat';
+      } else if (pkg === 'apk') {
+        cmdCode.innerText = 'apk add --allow-untrusted otcat';
+      } else if (pkg === 'pip') {
+        cmdCode.innerText = 'pip install otcat';
+      } else if (pkg === 'go') {
+        cmdCode.innerText = 'go install github.com/QuitOperation/otcat/cmd/otc@latest';
+      }
+    }
+
+    // Command Builder Update Logic
+    function updateBuilder() {
+      const proto = document.getElementById('cfg-proto').value;
+      const host = document.getElementById('cfg-host').value.trim() || '192.168.1.10:502';
+      const op = document.getElementById('cfg-op').value;
+      const addr = document.getElementById('cfg-addr').value.trim() || 'holding:40001';
+      const fmt = document.getElementById('cfg-fmt').value;
+      const safety = document.getElementById('cfg-safety').value;
+
+      document.getElementById('builder-cmd').innerText = `otcat ${proto} ${host} ${op} ${addr} ${fmt} ${safety}`.replace(/\s+/g, ' ').trim();
+    }
+
+    function executeCustomCmd() {
+      const customCmd = document.getElementById('builder-cmd').innerText;
+      document.getElementById('simulator').scrollIntoView({ behavior: 'smooth' });
+
+      const term = document.getElementById('term-body');
+      term.innerHTML = `
+        <div class="term-line"><span class="term-prompt">$</span><span class="term-cmd">${customCmd}</span></div>
+        <div class="term-output">{
+  <span class="json-key">"command"</span>: <span class="json-val">"${customCmd}"</span>,
+  <span class="json-key">"status"</span>: <span class="json-val">"CONNECTED"</span>,
+  <span class="json-key">"response_time_ms"</span>: <span class="json-num">3.4</span>,
+  <span class="json-key">"data"</span>: [12450]
+}<span class="blinking-cursor"></span></div>`;
+    }
+
+    function clearTerminal() {
+      document.getElementById('term-body').innerHTML = '<div class="term-line"><span class="term-prompt">$</span><span class="term-cmd">clear</span><span class="blinking-cursor"></span></div>';
+    }
+
+    // Repository GIF Showcase Tab Switcher
+    function switchGif(name, btn) {
+      document.querySelectorAll('.gif-tab-btn').forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-selected', 'false');
+      });
+      btn.classList.add('active');
+      btn.setAttribute('aria-selected', 'true');
+
+      const img = document.getElementById('demo-gif-img');
+      const caption = document.getElementById('demo-gif-caption');
+
+      if (name === 'quickstart') {
+        img.src = '../demo/gifs/quickstart.gif';
+        caption.innerText = 'otcat quickstart: reading holding register 40001 as JSON';
+      } else if (name === 'pipes') {
+        img.src = '../demo/gifs/pipes.gif';
+        caption.innerText = 'otcat pipeline: watching telemetry twice per second and piping into awk';
+      } else if (name === 'write_safety') {
+        img.src = '../demo/gifs/write_safety.gif';
+        caption.innerText = 'otcat write safety gate: requiring --confirm before writing setpoints';
+      }
+    }
+
+    // Hardened Scroll Reveal & Active Nav Highlighting Observer
+    document.addEventListener('DOMContentLoaded', () => {
+      const reveals = document.querySelectorAll('.reveal');
+      
+      const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('active');
+          }
+        });
+      }, { threshold: 0.05, rootMargin: '0px 0px -40px 0px' });
+
+      reveals.forEach(el => revealObserver.observe(el));
+
+      // Trigger reveal for elements already in viewport on load
+      setTimeout(() => {
+        reveals.forEach(el => {
+          const rect = el.getBoundingClientRect();
+          if (rect.top < window.innerHeight) {
+            el.classList.add('active');
+          }
+        });
+      }, 50);
+
+      // Scroll Listener for Active Nav Links & Back to Top Button
+      const sections = document.querySelectorAll('section[id]');
+      const navLinks = document.querySelectorAll('#desktop-nav-links a');
+      const btnTop = document.getElementById('btn-top');
+
+      window.addEventListener('scroll', () => {
+        // Back to top visibility
+        if (window.scrollY > 400) {
+          btnTop.classList.add('visible');
+        } else {
+          btnTop.classList.remove('visible');
+        }
+
+        // Active Nav link highlight
+        let currentSectionId = '';
+        sections.forEach(sec => {
+          const top = sec.offsetTop - 120;
+          const height = sec.offsetHeight;
+          if (window.scrollY >= top && window.scrollY < top + height) {
+            currentSectionId = sec.getAttribute('id');
+          }
+        });
+
+        navLinks.forEach(link => {
+          link.classList.remove('active');
+          if (link.getAttribute('href') === `#${currentSectionId}`) {
+            link.classList.add('active');
+          }
+        });
+      });
+    });
+
+    // Copy Button Logic
+    function copyText(text, btn) {
+      navigator.clipboard.writeText(text);
+      const original = btn.innerText;
+      btn.innerText = "Copied!";
+      btn.style.backgroundColor = "var(--green)";
+      btn.style.color = "#ffffff";
+      setTimeout(() => {
+        btn.innerText = original;
+        btn.style.backgroundColor = "";
+        btn.style.color = "";
+      }, 2000);
+    }
+
+    // Terminal Simulator Demo Tabs
+    function runDemo(type, btn) {
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-selected', 'false');
+      });
+      btn.classList.add('active');
+      btn.setAttribute('aria-selected', 'true');
+
+      const term = document.getElementById('term-body');
+      if (type === 'read_json') {
+        term.innerHTML = `
+          <div class="term-line"><span class="term-prompt">$</span><span class="term-cmd">otcat --modbus 192.168.1.10:502 --read holding:40001 --json</span></div>
+          <div class="term-output">{
+  <span class="json-key">"address"</span>: <span class="json-val">"holding:40001"</span>,
+  <span class="json-key">"table"</span>: <span class="json-val">"holding"</span>,
+  <span class="json-key">"offset"</span>: <span class="json-num">0</span>,
+  <span class="json-key">"value"</span>: <span class="json-num">12450</span>,
+  <span class="json-key">"status"</span>: <span class="json-val">"OK"</span>
+}<span class="blinking-cursor"></span></div>`;
+      } else if (type === 'watch_mode') {
+        term.innerHTML = `
+          <div class="term-line"><span class="term-prompt">$</span><span class="term-cmd">otc --modbus 192.168.1.10:502 --watch holding:40001 --interval 500ms --raw</span></div>
+          <div class="term-output">12450\n12452\n12455\n12460 <span style="color:var(--orange); font-weight:bold;">(watching telemetry every 500ms...)</span><span class="blinking-cursor"></span></div>`;
+      } else if (type === 'write_confirm') {
+        term.innerHTML = `
+          <div class="term-line"><span class="term-prompt">$</span><span class="term-cmd">otcat --modbus 192.168.1.10:502 --write holding:40001 --value 100 --confirm</span></div>
+          <div class="term-output"><span style="color:var(--green); font-weight:bold;">[SAFETY GATE CONFIRMED]</span> Writing value 100 to holding:40001...\nSUCCESS: Register 40001 updated to 100 (0x0064).<span class="blinking-cursor"></span></div>`;
+      }
+    }
+
+    // Modbus Address Converter
+    function convertModbus() {
+      const input = document.getElementById('mb-input').value.trim();
+
+      const resTable = document.getElementById('res-table');
+      const resOffset = document.getElementById('res-offset');
+      const resFC = document.getElementById('res-fc');
+      const resFlag = document.getElementById('res-flag');
+
+      let num = NaN;
+      if (input.startsWith('0x') || input.startsWith('0X')) {
+        num = parseInt(input.substring(2), 16);
+      } else {
+        num = parseInt(input, 10);
+      }
+
+      if (isNaN(num)) {
+        resTable.innerText = "Invalid Input";
+        resOffset.innerText = "-";
+        resFC.innerText = "-";
+        resFlag.innerText = "-";
+        return;
+      }
+
+      if (num >= 40001 && num <= 49999) {
+        const offset = num - 40001;
+        resTable.innerText = "Holding Registers";
+        resOffset.innerText = `0x${offset.toString(16).padStart(4, '0').toUpperCase()} (${offset})`;
+        resFC.innerText = "FC03 (Read Holding)";
+        resFlag.innerText = `holding:${num}`;
+      } else if (num >= 30001 && num <= 39999) {
+        const offset = num - 30001;
+        resTable.innerText = "Input Registers";
+        resOffset.innerText = `0x${offset.toString(16).padStart(4, '0').toUpperCase()} (${offset})`;
+        resFC.innerText = "FC04 (Read Input)";
+        resFlag.innerText = `input:${num}`;
+      } else if (num >= 1 && num <= 9999) {
+        const offset = num - 1;
+        resTable.innerText = "Coils (Read/Write)";
+        resOffset.innerText = `0x${offset.toString(16).padStart(4, '0').toUpperCase()} (${offset})`;
+        resFC.innerText = "FC01 (Read Coils)";
+        resFlag.innerText = `coil:${num}`;
+      } else if (num >= 10001 && num <= 19999) {
+        const offset = num - 10001;
+        resTable.innerText = "Discrete Inputs";
+        resOffset.innerText = `0x${offset.toString(16).padStart(4, '0').toUpperCase()} (${offset})`;
+        resFC.innerText = "FC02 (Read Discrete)";
+        resFlag.innerText = `discrete:${num}`;
+      } else {
+        resTable.innerText = "Raw Offset";
+        resOffset.innerText = `0x${num.toString(16).padStart(4, '0').toUpperCase()} (${num})`;
+        resFC.innerText = "Direct Register";
+        resFlag.innerText = `offset:${num}`;
+      }
+    }
+
+    // FAQ Accordion Toggle
+    function toggleFaq(headerElem) {
+      const item = headerElem.parentElement;
+      const isOpen = item.classList.contains('open');
+      const icon = headerElem.querySelector('.faq-toggle-icon');
+
+      if (isOpen) {
+        item.classList.remove('open');
+        headerElem.setAttribute('aria-expanded', 'false');
+        icon.innerText = '+';
+      } else {
+        item.classList.add('open');
+        headerElem.setAttribute('aria-expanded', 'true');
+        icon.innerText = '−';
+      }
+    }
+  </script>
+</body>
+</html>

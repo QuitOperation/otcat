@@ -1,0 +1,51 @@
+name: 💡 Feature or Driver Request
+description: Suggest an idea, new protocol driver, or CLI improvement for otcat
+title: "[FEATURE]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        We welcome ideas for new protocol support, CLI flags, formatting options, or performance enhancements for `otcat`.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Feature Summary
+      description: Concise overview of the proposed feature or improvement.
+      placeholder: e.g. Add --swap-words option for 32-bit registers or add CIP Read Tag support for EtherNet/IP driver.
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Is your feature request related to a problem?
+      description: A clear description of what problem or limitation you are encountering.
+    validations:
+      required: false
+
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed Solution & CLI Interface
+      description: Describe how you would like `otcat` to behave or what flags it should accept.
+      placeholder: otcat --eip 192.168.1.50:44818 --read "Program:MainProgram.MotorSpeed" --json
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternative Solutions Considered
+      description: Describe any alternative solutions or workaround tools you have considered.
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context & Hardware Reference
+      description: Links to protocol documentation, hardware specs, or example packet dumps.
+    validations:
+      required: false
