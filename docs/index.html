@@ -1486,14 +1486,6 @@
       <div class="builder-box">
         <div class="builder-form-grid">
           <div class="form-ctrl-group">
-            <label for="cfg-bin">Binary Command</label>
-            <select id="cfg-bin" class="form-ctrl-input" onchange="updateBuilder()">
-              <option value="otcat">otcat (Primary CLI)</option>
-              <option value="otc">otc (Short Alias)</option>
-            </select>
-          </div>
-
-          <div class="form-ctrl-group">
             <label for="cfg-proto">Protocol Driver</label>
             <select id="cfg-proto" class="form-ctrl-input" onchange="updateBuilder()">
               <option value="--modbus">Modbus TCP (--modbus)</option>
@@ -1522,36 +1514,31 @@
             <input type="text" id="cfg-addr" class="form-ctrl-input" value="holding:40001" oninput="updateBuilder()">
           </div>
 
-          <div class="form-ctrl-group" id="group-val" style="display:none;">
-            <label for="cfg-val">Value to Write</label>
-            <input type="text" id="cfg-val" class="form-ctrl-input" value="100" oninput="updateBuilder()">
-          </div>
-
-          <div class="form-ctrl-group" id="group-interval" style="display:none;">
-            <label for="cfg-interval">Polling Interval</label>
-            <input type="text" id="cfg-interval" class="form-ctrl-input" value="500ms" oninput="updateBuilder()">
-          </div>
-
-          <div class="form-ctrl-group" id="group-fmt">
+          <div class="form-ctrl-group">
             <label for="cfg-fmt">Output Format</label>
             <select id="cfg-fmt" class="form-ctrl-input" onchange="updateBuilder()">
               <option value="--json">--json (Structured JSON)</option>
               <option value="--raw">--raw (Bare Value)</option>
-              <option value="--csv">--csv (Spreadsheet CSV)</option>
+              <option value="--csv">--csv (Comma-Separated)</option>
             </select>
           </div>
 
-          <div class="form-ctrl-group" id="group-safety">
+          <div class="form-ctrl-group" id="group-val">
+            <label for="cfg-val">Write Value</label>
+            <input type="text" id="cfg-val" class="form-ctrl-input" value="100" oninput="updateBuilder()">
+          </div>
+
+          <div class="form-ctrl-group">
             <label for="cfg-safety">Safety Confirmation</label>
             <select id="cfg-safety" class="form-ctrl-input" onchange="updateBuilder()">
               <option value="--confirm">--confirm (Gate Required)</option>
-              <option value="">None (Interactive Gate)</option>
+              <option value="">None (Default Gate)</option>
             </select>
           </div>
         </div>
 
         <div class="builder-output-bar">
-          <code id="builder-cmd">otcat --modbus 192.168.1.10:502 --read holding:40001 --json</code>
+          <code id="builder-cmd">otcat --modbus 192.168.1.10:502 --read holding:40001 --json --confirm</code>
           <div style="display: flex; gap: 10px; flex-wrap: wrap;">
             <button class="btn-copy" onclick="executeCustomCmd()">Run in Terminal</button>
             <button class="btn-copy" onclick="copyText(document.getElementById('builder-cmd').innerText, this)">Copy Command</button>
@@ -1823,215 +1810,204 @@
       }
     }
 
-    // Command Builder Update Logic
+    // Realistic Interactive Terminal Execution Engine
+    let watchTimer = null;
+    let typingTimer = null;
+
+    function clearWatchTimer() {
+      if (watchTimer) {
+        clearInterval(watchTimer);
+        watchTimer = null;
+      }
+      if (typingTimer) {
+        clearTimeout(typingTimer);
+        typingTimer = null;
+      }
+    }
+
     function updateBuilder() {
-      const binElem = document.getElementById('cfg-bin');
-      const bin = binElem ? binElem.value : 'otcat';
       const proto = document.getElementById('cfg-proto').value;
       const host = document.getElementById('cfg-host').value.trim() || '192.168.1.10:502';
       const op = document.getElementById('cfg-op').value;
       const addr = document.getElementById('cfg-addr').value.trim() || 'holding:40001';
       const fmt = document.getElementById('cfg-fmt').value;
       const safety = document.getElementById('cfg-safety').value;
-      
-      const valElem = document.getElementById('cfg-val');
-      const val = valElem ? valElem.value.trim() || '100' : '100';
+      const valInput = document.getElementById('cfg-val');
 
-      const intElem = document.getElementById('cfg-interval');
-      const interval = intElem ? intElem.value.trim() || '500ms' : '500ms';
-
-      const groupVal = document.getElementById('group-val');
-      const groupInterval = document.getElementById('group-interval');
-      const groupFmt = document.getElementById('group-fmt');
-      const groupSafety = document.getElementById('group-safety');
-
-      let cmdParts = [bin, proto, host, op, addr];
-
+      let valPart = '';
       if (op === '--write') {
-        if (groupVal) groupVal.style.display = 'flex';
-        if (groupInterval) groupInterval.style.display = 'none';
-        if (groupFmt) groupFmt.style.display = 'none';
-        if (groupSafety) groupSafety.style.display = 'flex';
-        cmdParts.push(`--value ${val}`);
-        if (safety) cmdParts.push(safety);
-      } else if (op === '--watch') {
-        if (groupVal) groupVal.style.display = 'none';
-        if (groupInterval) groupInterval.style.display = 'flex';
-        if (groupFmt) groupFmt.style.display = 'flex';
-        if (groupSafety) groupSafety.style.display = 'none';
-        cmdParts.push(`--interval ${interval}`);
-        cmdParts.push(fmt);
-      } else {
-        // --read
-        if (groupVal) groupVal.style.display = 'none';
-        if (groupInterval) groupInterval.style.display = 'none';
-        if (groupFmt) groupFmt.style.display = 'flex';
-        if (groupSafety) groupSafety.style.display = 'none';
-        cmdParts.push(fmt);
+        valPart = `--value ${valInput ? valInput.value.trim() || '100' : '100'}`;
       }
 
-      document.getElementById('builder-cmd').innerText = cmdParts.join(' ').replace(/\s+/g, ' ').trim();
+      const cmdString = `otcat ${proto} ${host} ${op} ${addr} ${valPart} ${fmt} ${safety}`.replace(/\s+/g, ' ').trim();
+      document.getElementById('builder-cmd').innerText = cmdString;
     }
 
     function executeCustomCmd() {
       const customCmd = document.getElementById('builder-cmd').innerText;
-      const binElem = document.getElementById('cfg-bin');
-      const bin = binElem ? binElem.value : 'otcat';
-      const proto = document.getElementById('cfg-proto').value;
-      const host = document.getElementById('cfg-host').value.trim() || '192.168.1.10:502';
-      const op = document.getElementById('cfg-op').value;
-      const addr = document.getElementById('cfg-addr').value.trim() || 'holding:40001';
-      const fmt = document.getElementById('cfg-fmt').value;
-      const safety = document.getElementById('cfg-safety').value;
-      const valElem = document.getElementById('cfg-val');
-      const val = valElem ? valElem.value.trim() || '100' : '100';
-      const intElem = document.getElementById('cfg-interval');
-      const interval = intElem ? intElem.value.trim() || '500ms' : '500ms';
-
       document.getElementById('simulator').scrollIntoView({ behavior: 'smooth' });
+      runRealisticTerminalCommand(customCmd);
+    }
 
-      // Highlight active demo tabs state or show custom tab indicator
-      document.querySelectorAll('.tab-btn').forEach(b => {
-        b.classList.remove('active');
-        b.setAttribute('aria-selected', 'false');
-      });
-
+    function runRealisticTerminalCommand(cmdString) {
+      clearWatchTimer();
       const term = document.getElementById('term-body');
-      let outputContent = '';
+      term.innerHTML = '<div class="term-line"><span class="term-prompt">$</span><span class="term-cmd" id="typing-cmd"></span><span class="blinking-cursor"></span></div>';
+      
+      const cmdElem = document.getElementById('typing-cmd');
+      let charIdx = 0;
 
-      if (proto !== '--modbus') {
-        outputContent = `<div class="term-output" style="color:#38bdf8;">[DRIVER ROADMAP NOTICE] Flag ${proto} registered for host ${host}.\nConnecting to controller for target register ${addr}...\nSTATUS: Registered driver stub active.</div>`;
-      } else if (op === '--write') {
-        const hexVal = '0x' + parseInt(val, 10).toString(16).padStart(4, '0').toUpperCase();
-        if (safety === '--confirm') {
-          outputContent = `<div class="term-output"><span style="color:var(--green); font-weight:bold;">[SAFETY GATE CONFIRMED]</span> Writing value ${val} (${hexVal}) to ${addr} on ${host}...\nSUCCESS: Register ${addr} updated cleanly.</div>`;
+      // Realistic character typing animation
+      function typeChar() {
+        if (charIdx < cmdString.length) {
+          cmdElem.innerText += cmdString[charIdx];
+          charIdx++;
+          typingTimer = setTimeout(typeChar, Math.floor(Math.random() * 12) + 12);
         } else {
-          outputContent = `<div class="term-output">CONFIRM WRITE: Write ${val} (${hexVal}) to ${addr} on ${host}? [y/N] y\n<span style="color:var(--green); font-weight:bold;">SUCCESS:</span> Register ${addr} updated to ${val}.</div>`;
+          // Done typing! Simulate network connect and execution delay
+          typingTimer = setTimeout(() => {
+            simulateExecutionOutput(cmdString);
+          }, 140);
         }
-      } else if (op === '--watch') {
-        const table = addr.split(':')[0] || 'holding';
-        outputContent = `<div class="term-output">12450\n12452\n12455\n12460\n<span style="color:var(--orange); font-weight:bold;">(watching ${table} telemetry every ${interval}... press Ctrl+C to stop)</span></div>`;
+      }
+      typeChar();
+    }
+
+    function parseCmd(cmdString) {
+      const isModbus = cmdString.includes('--modbus');
+      const isEip = cmdString.includes('--eip');
+      const isS7 = cmdString.includes('--s7comm');
+      const isBacnet = cmdString.includes('--bacnet');
+      
+      const isRead = cmdString.includes('--read');
+      const isWatch = cmdString.includes('--watch');
+      const isWrite = cmdString.includes('--write');
+      
+      const isJson = cmdString.includes('--json');
+      const isRaw = cmdString.includes('--raw');
+      const isCsv = cmdString.includes('--csv');
+      const isConfirm = cmdString.includes('--confirm');
+
+      let addrMatch = cmdString.match(/(holding:\d+|input:\d+|coil:\d+|discrete:\d+|offset:\d+|\d+)/i);
+      let addrStr = addrMatch ? addrMatch[0] : 'holding:40001';
+
+      let hostMatch = cmdString.match(/\b(?:\d{1,3}\.){3}\d{1,3}:\d+\b/);
+      let hostStr = hostMatch ? hostMatch[0] : '192.168.1.10:502';
+
+      let valMatch = cmdString.match(/--value\s+(\d+)/);
+      let valNum = valMatch ? valMatch[1] : '100';
+
+      return { isModbus, isEip, isS7, isBacnet, isRead, isWatch, isWrite, isJson, isRaw, isCsv, isConfirm, addrStr, hostStr, valNum };
+    }
+
+    function simulateExecutionOutput(cmdString) {
+      const parsed = parseCmd(cmdString);
+      const term = document.getElementById('term-body');
+
+      // Roadmap Protocol Drivers
+      if (!parsed.isModbus && (parsed.isEip || parsed.isS7 || parsed.isBacnet)) {
+        const protoName = parsed.isEip ? 'EtherNet/IP' : (parsed.isS7 ? 'S7comm' : 'BACnet/IP');
+        const port = parsed.isEip ? '44818' : (parsed.isS7 ? '102' : '47808');
+        term.innerHTML = `
+          <div class="term-line"><span class="term-prompt">$</span><span class="term-cmd">${cmdString}</span></div>
+          <div class="term-output"><span style="color:#38bdf8;">otcat: connecting to ${parsed.hostStr} (${protoName} port ${port})...</span>
+<span style="color:#f59e0b;">NOTICE: ${protoName} driver is registered as CLI stub on active roadmap.</span>
+See docs/driver_roadmap.md for details.<span class="blinking-cursor"></span></div>`;
+        return;
+      }
+
+      // Parse Address details
+      let table = 'holding';
+      let num = 40001;
+      let offset = 0;
+      if (parsed.addrStr.includes(':')) {
+        const parts = parsed.addrStr.split(':');
+        table = parts[0];
+        num = parseInt(parts[1], 10) || 40001;
+      }
+      if (table === 'holding') offset = num >= 40001 ? num - 40001 : num;
+      else if (table === 'input') offset = num >= 30001 ? num - 30001 : num;
+      else if (table === 'coil') offset = num >= 1 ? num - 1 : num;
+      else if (table === 'discrete') offset = num >= 10001 ? num - 10001 : num;
+
+      const hexOffset = `0x${offset.toString(16).padStart(4, '0').toUpperCase()}`;
+      const mockVal = 12450;
+
+      // 1. WRITE OPERATION
+      if (parsed.isWrite) {
+        if (parsed.isConfirm) {
+          term.innerHTML = `
+            <div class="term-line"><span class="term-prompt">$</span><span class="term-cmd">${cmdString}</span></div>
+            <div class="term-output"><span style="color:var(--green); font-weight:bold;">[SAFETY GATE CONFIRMED]</span> Writing ${parsed.valNum} to ${parsed.addrStr} on ${parsed.hostStr}...
+SUCCESS: Register ${parsed.addrStr} (wire offset ${hexOffset}) updated to ${parsed.valNum} (0x${parseInt(parsed.valNum, 10).toString(16).padStart(4,'0').toUpperCase()}).<span class="blinking-cursor"></span></div>`;
+        } else {
+          term.innerHTML = `
+            <div class="term-line"><span class="term-prompt">$</span><span class="term-cmd">${cmdString}</span></div>
+            <div class="term-output"><span style="color:#f59e0b; font-weight:bold;">CONFIRM WRITE:</span> Write ${parsed.valNum} to ${parsed.addrStr} on ${parsed.hostStr}? [y/N]
+<span style="color:#f43f5e; font-weight:bold;">ABORTED:</span> Write operation requires confirmation (--confirm flag or interactive 'y'). (exit code 4)<span class="blinking-cursor"></span></div>`;
+        }
+        return;
+      }
+
+      // 2. WATCH MODE (LIVE STREAMING)
+      if (parsed.isWatch) {
+        let outputHeader = '';
+        if (parsed.isJson) {
+          outputHeader = `<div class="term-line"><span class="term-prompt">$</span><span class="term-cmd">${cmdString}</span></div><div class="term-output" id="watch-output-container"></div>`;
+        } else if (parsed.isCsv) {
+          outputHeader = `<div class="term-line"><span class="term-prompt">$</span><span class="term-cmd">${cmdString}</span></div><div class="term-output" id="watch-output-container">address,table,offset,value,status\n</div>`;
+        } else {
+          outputHeader = `<div class="term-line"><span class="term-prompt">$</span><span class="term-cmd">${cmdString}</span></div><div class="term-output" id="watch-output-container"></div>`;
+        }
+
+        term.innerHTML = outputHeader;
+        const container = document.getElementById('watch-output-container');
+        let tickCount = 0;
+        let currentVal = mockVal;
+
+        function emitWatchTick() {
+          if (tickCount >= 10) {
+            clearWatchTimer();
+            container.innerHTML += `\n<span style="color:var(--orange); font-weight:bold;">[WATCH LOOP ACTIVE] Telemetry streaming...</span><span class="blinking-cursor"></span>`;
+            return;
+          }
+          tickCount++;
+          currentVal += Math.floor(Math.random() * 5) - 1;
+          const isoTime = new Date().toISOString().substring(11, 23);
+
+          if (parsed.isJson) {
+            container.innerHTML += `{\n  <span class="json-key">"time"</span>: <span class="json-val">"${isoTime}"</span>,\n  <span class="json-key">"address"</span>: <span class="json-val">"${parsed.addrStr}"</span>,\n  <span class="json-key">"value"</span>: <span class="json-num">${currentVal}</span>\n}\n`;
+          } else if (parsed.isCsv) {
+            container.innerHTML += `${parsed.addrStr},${table},${offset},${currentVal},OK\n`;
+          } else {
+            container.innerHTML += `${currentVal}\n`;
+          }
+          term.scrollTop = term.scrollHeight;
+        }
+
+        emitWatchTick();
+        watchTimer = setInterval(emitWatchTick, 500);
+        return;
+      }
+
+      // 3. READ QUERY
+      let bodyHtml = '';
+      if (parsed.isJson) {
+        bodyHtml = `{\n  <span class="json-key">"address"</span>: <span class="json-val">"${parsed.addrStr}"</span>,\n  <span class="json-key">"table"</span>: <span class="json-val">"${table}"</span>,\n  <span class="json-key">"offset"</span>: <span class="json-num">${offset}</span>,\n  <span class="json-key">"value"</span>: <span class="json-num">${mockVal}</span>,\n  <span class="json-key">"status"</span>: <span class="json-val">"OK"</span>\n}`;
+      } else if (parsed.isCsv) {
+        bodyHtml = `address,table,offset,value,status\n${parsed.addrStr},${table},${offset},${mockVal},OK`;
       } else {
-        // Read mode
-        const table = addr.split(':')[0] || 'holding';
-        if (fmt === '--json') {
-          outputContent = `<div class="term-output">{
-  <span class="json-key">"address"</span>: <span class="json-val">"${addr}"</span>,
-  <span class="json-key">"table"</span>: <span class="json-val">"${table}"</span>,
-  <span class="json-key">"offset"</span>: <span class="json-num">0</span>,
-  <span class="json-key">"value"</span>: <span class="json-num">12450</span>,
-  <span class="json-key">"quality"</span>: <span class="json-val">"GOOD"</span>,
-  <span class="json-key">"status"</span>: <span class="json-val">"OK"</span>
-}</div>`;
-        } else if (fmt === '--csv') {
-          outputContent = `<div class="term-output" style="color:#ffffff;">timestamp,address,value,quality,status\n2026-07-23T14:34:36Z,${addr},12450,GOOD,OK</div>`;
-        } else {
-          // --raw
-          outputContent = `<div class="term-output" style="color:var(--green); font-weight:bold; font-size:1.1rem;">12450</div>`;
-        }
+        bodyHtml = `${mockVal}`;
       }
 
       term.innerHTML = `
-        <div class="term-line"><span class="term-prompt">$</span><span class="term-cmd">${customCmd}</span></div>
-        ${outputContent}<span class="blinking-cursor"></span>`;
+        <div class="term-line"><span class="term-prompt">$</span><span class="term-cmd">${cmdString}</span></div>
+        <div class="term-output">${bodyHtml}<span class="blinking-cursor"></span></div>`;
     }
 
     function clearTerminal() {
+      clearWatchTimer();
       document.getElementById('term-body').innerHTML = '<div class="term-line"><span class="term-prompt">$</span><span class="term-cmd">clear</span><span class="blinking-cursor"></span></div>';
-    }
-
-    // Repository GIF Showcase Tab Switcher
-    function switchGif(name, btn) {
-      document.querySelectorAll('.gif-tab-btn').forEach(b => {
-        b.classList.remove('active');
-        b.setAttribute('aria-selected', 'false');
-      });
-      btn.classList.add('active');
-      btn.setAttribute('aria-selected', 'true');
-
-      const img = document.getElementById('demo-gif-img');
-      const caption = document.getElementById('demo-gif-caption');
-
-      if (name === 'quickstart') {
-        img.src = '../demo/gifs/quickstart.gif';
-        caption.innerText = 'otcat quickstart: reading holding register 40001 as JSON';
-      } else if (name === 'pipes') {
-        img.src = '../demo/gifs/pipes.gif';
-        caption.innerText = 'otcat pipeline: watching telemetry twice per second and piping into awk';
-      } else if (name === 'write_safety') {
-        img.src = '../demo/gifs/write_safety.gif';
-        caption.innerText = 'otcat write safety gate: requiring --confirm before writing setpoints';
-      }
-    }
-
-    // Hardened Scroll Reveal & Active Nav Highlighting Observer
-    document.addEventListener('DOMContentLoaded', () => {
-      const reveals = document.querySelectorAll('.reveal');
-      
-      const revealObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('active');
-          }
-        });
-      }, { threshold: 0.05, rootMargin: '0px 0px -40px 0px' });
-
-      reveals.forEach(el => revealObserver.observe(el));
-
-      // Trigger reveal for elements already in viewport on load
-      setTimeout(() => {
-        reveals.forEach(el => {
-          const rect = el.getBoundingClientRect();
-          if (rect.top < window.innerHeight) {
-            el.classList.add('active');
-          }
-        });
-      }, 50);
-
-      // Scroll Listener for Active Nav Links & Back to Top Button
-      const sections = document.querySelectorAll('section[id]');
-      const navLinks = document.querySelectorAll('#desktop-nav-links a');
-      const btnTop = document.getElementById('btn-top');
-
-      window.addEventListener('scroll', () => {
-        // Back to top visibility
-        if (window.scrollY > 400) {
-          btnTop.classList.add('visible');
-        } else {
-          btnTop.classList.remove('visible');
-        }
-
-        // Active Nav link highlight
-        let currentSectionId = '';
-        sections.forEach(sec => {
-          const top = sec.offsetTop - 120;
-          const height = sec.offsetHeight;
-          if (window.scrollY >= top && window.scrollY < top + height) {
-            currentSectionId = sec.getAttribute('id');
-          }
-        });
-
-        navLinks.forEach(link => {
-          link.classList.remove('active');
-          if (link.getAttribute('href') === `#${currentSectionId}`) {
-            link.classList.add('active');
-          }
-        });
-      });
-    });
-
-    // Copy Button Logic
-    function copyText(text, btn) {
-      navigator.clipboard.writeText(text);
-      const original = btn.innerText;
-      btn.innerText = "Copied!";
-      btn.style.backgroundColor = "var(--green)";
-      btn.style.color = "#ffffff";
-      setTimeout(() => {
-        btn.innerText = original;
-        btn.style.backgroundColor = "";
-        btn.style.color = "";
-      }, 2000);
     }
 
     // Terminal Simulator Demo Tabs
@@ -2043,25 +2019,12 @@
       btn.classList.add('active');
       btn.setAttribute('aria-selected', 'true');
 
-      const term = document.getElementById('term-body');
       if (type === 'read_json') {
-        term.innerHTML = `
-          <div class="term-line"><span class="term-prompt">$</span><span class="term-cmd">otcat --modbus 192.168.1.10:502 --read holding:40001 --json</span></div>
-          <div class="term-output">{
-  <span class="json-key">"address"</span>: <span class="json-val">"holding:40001"</span>,
-  <span class="json-key">"table"</span>: <span class="json-val">"holding"</span>,
-  <span class="json-key">"offset"</span>: <span class="json-num">0</span>,
-  <span class="json-key">"value"</span>: <span class="json-num">12450</span>,
-  <span class="json-key">"status"</span>: <span class="json-val">"OK"</span>
-}<span class="blinking-cursor"></span></div>`;
+        runRealisticTerminalCommand('otcat --modbus 192.168.1.10:502 --read holding:40001 --json');
       } else if (type === 'watch_mode') {
-        term.innerHTML = `
-          <div class="term-line"><span class="term-prompt">$</span><span class="term-cmd">otc --modbus 192.168.1.10:502 --watch holding:40001 --interval 500ms --raw</span></div>
-          <div class="term-output">12450\n12452\n12455\n12460 <span style="color:var(--orange); font-weight:bold;">(watching telemetry every 500ms...)</span><span class="blinking-cursor"></span></div>`;
+        runRealisticTerminalCommand('otc --modbus 192.168.1.10:502 --watch holding:40001 --interval 500ms --raw');
       } else if (type === 'write_confirm') {
-        term.innerHTML = `
-          <div class="term-line"><span class="term-prompt">$</span><span class="term-cmd">otcat --modbus 192.168.1.10:502 --write holding:40001 --value 100 --confirm</span></div>
-          <div class="term-output"><span style="color:var(--green); font-weight:bold;">[SAFETY GATE CONFIRMED]</span> Writing value 100 to holding:40001...\nSUCCESS: Register 40001 updated to 100 (0x0064).<span class="blinking-cursor"></span></div>`;
+        runRealisticTerminalCommand('otcat --modbus 192.168.1.10:502 --write holding:40001 --value 100 --confirm');
       }
     }
 
