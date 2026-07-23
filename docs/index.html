@@ -2084,6 +2084,65 @@ SUCCESS: Register ${parsed.addrStr} (wire offset ${hexOffset}) updated to ${pars
       }
     }
 
+    // GIF Showcase Switcher
+    function switchGif(gifName, btn) {
+      document.querySelectorAll('.gif-tab-btn').forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-selected', 'false');
+      });
+      if (btn) {
+        btn.classList.add('active');
+        btn.setAttribute('aria-selected', 'true');
+      }
+
+      const img = document.getElementById('demo-gif-img');
+      const caption = document.getElementById('demo-gif-caption');
+      if (!img || !caption) return;
+
+      if (gifName === 'quickstart') {
+        img.src = '../demo/gifs/quickstart.gif';
+        caption.innerText = 'otcat quickstart: reading holding register 40001 as JSON';
+      } else if (gifName === 'pipes') {
+        img.src = '../demo/gifs/pipes.gif';
+        caption.innerText = 'otcat unix pipeline: piping holding register values to awk and tee';
+      } else if (gifName === 'write_safety') {
+        img.src = '../demo/gifs/write_safety.gif';
+        caption.innerText = 'otcat write safety gate: interactive write confirmation PDU prompt';
+      }
+    }
+
+    // Clipboard Copy Helper
+    function copyText(text, btn) {
+      if (!text) return;
+      navigator.clipboard.writeText(text).then(() => {
+        if (btn) {
+          const origText = btn.innerText;
+          btn.innerText = '✓ Copied';
+          btn.style.backgroundColor = 'var(--green)';
+          btn.style.color = '#ffffff';
+          setTimeout(() => {
+            btn.innerText = origText;
+            btn.style.backgroundColor = '';
+            btn.style.color = '';
+          }, 2000);
+        }
+      }).catch(() => {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        if (btn) {
+          const origText = btn.innerText;
+          btn.innerText = '✓ Copied';
+          setTimeout(() => {
+            btn.innerText = origText;
+          }, 2000);
+        }
+      });
+    }
+
     // FAQ Accordion Toggle
     function toggleFaq(headerElem) {
       const item = headerElem.parentElement;
@@ -2100,6 +2159,49 @@ SUCCESS: Register ${parsed.addrStr} (wire offset ${hexOffset}) updated to ${pars
         icon.innerText = '−';
       }
     }
+
+    // DOM Ready Initialization & Scroll Reveal Observer
+    document.addEventListener('DOMContentLoaded', () => {
+      // 1. Intersection Observer for Smooth Scroll Reveal Animations
+      const revealElems = document.querySelectorAll('.reveal');
+      if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('active');
+            }
+          });
+        }, { threshold: 0.08 });
+
+        revealElems.forEach(el => observer.observe(el));
+      } else {
+        revealElems.forEach(el => el.classList.add('active'));
+      }
+
+      // Fallback: immediately activate elements already in viewport
+      revealElems.forEach(el => {
+        const rect = el.getBoundingClientRect();
+        if (rect.top < window.innerHeight && rect.bottom >= 0) {
+          el.classList.add('active');
+        }
+      });
+
+      // 2. Back-to-Top Button Scroll Visibility
+      const btnTop = document.getElementById('btn-top');
+      if (btnTop) {
+        window.addEventListener('scroll', () => {
+          if (window.scrollY > 350) {
+            btnTop.classList.add('visible');
+          } else {
+            btnTop.classList.remove('visible');
+          }
+        });
+      }
+
+      // 3. Initialize Interactive Components
+      updateBuilder();
+      convertModbus();
+    });
   </script>
 </body>
 </html>
