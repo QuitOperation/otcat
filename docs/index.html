@@ -938,81 +938,6 @@
     .json-val { color: var(--blue); }
     .json-num { color: var(--green); }
 
-    /* Enhanced Feature Bullets & Editorial Tip Card */
-    .feature-bullets-list {
-      list-style: none;
-      margin-bottom: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .feature-bullets-list li {
-      font-size: 0.96rem;
-      color: var(--text);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .bullet-icon {
-      font-size: 1.1rem;
-    }
-
-    .tip-card-editorial {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-left: 4px solid var(--orange);
-      padding: 14px 18px;
-      font-size: 0.88rem;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      box-shadow: var(--shadow-sm);
-    }
-
-    .tip-badge {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.75rem;
-      font-weight: 700;
-      background: var(--orange-subtle);
-      color: var(--orange);
-      padding: 3px 8px;
-      border-radius: 3px;
-      text-transform: uppercase;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-
-    /* Terminal Footer Status Bar */
-    .terminal-footer {
-      background: #14161b;
-      border-top: 1px solid #22252e;
-      padding: 8px 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.76rem;
-      color: #888888;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .term-status-dot {
-      display: inline-block;
-      width: 8px;
-      height: 8px;
-      background: #27c93f;
-      border-radius: 50%;
-      margin-right: 6px;
-      box-shadow: 0 0 8px #27c93f;
-    }
-
-    .term-status-meta {
-      color: #666666;
-    }
-
     /* High Contrast Dark Mode Full-Width Banner */
     .banner-dark-full {
       background: var(--bg-banner);
@@ -1561,6 +1486,14 @@
       <div class="builder-box">
         <div class="builder-form-grid">
           <div class="form-ctrl-group">
+            <label for="cfg-bin">Binary Command</label>
+            <select id="cfg-bin" class="form-ctrl-input" onchange="updateBuilder()">
+              <option value="otcat">otcat (Primary CLI)</option>
+              <option value="otc">otc (Short Alias)</option>
+            </select>
+          </div>
+
+          <div class="form-ctrl-group">
             <label for="cfg-proto">Protocol Driver</label>
             <select id="cfg-proto" class="form-ctrl-input" onchange="updateBuilder()">
               <option value="--modbus">Modbus TCP (--modbus)</option>
@@ -1589,25 +1522,36 @@
             <input type="text" id="cfg-addr" class="form-ctrl-input" value="holding:40001" oninput="updateBuilder()">
           </div>
 
-          <div class="form-ctrl-group">
+          <div class="form-ctrl-group" id="group-val" style="display:none;">
+            <label for="cfg-val">Value to Write</label>
+            <input type="text" id="cfg-val" class="form-ctrl-input" value="100" oninput="updateBuilder()">
+          </div>
+
+          <div class="form-ctrl-group" id="group-interval" style="display:none;">
+            <label for="cfg-interval">Polling Interval</label>
+            <input type="text" id="cfg-interval" class="form-ctrl-input" value="500ms" oninput="updateBuilder()">
+          </div>
+
+          <div class="form-ctrl-group" id="group-fmt">
             <label for="cfg-fmt">Output Format</label>
             <select id="cfg-fmt" class="form-ctrl-input" onchange="updateBuilder()">
               <option value="--json">--json (Structured JSON)</option>
               <option value="--raw">--raw (Bare Value)</option>
+              <option value="--csv">--csv (Spreadsheet CSV)</option>
             </select>
           </div>
 
-          <div class="form-ctrl-group">
+          <div class="form-ctrl-group" id="group-safety">
             <label for="cfg-safety">Safety Confirmation</label>
             <select id="cfg-safety" class="form-ctrl-input" onchange="updateBuilder()">
               <option value="--confirm">--confirm (Gate Required)</option>
-              <option value="">None (Default Gate)</option>
+              <option value="">None (Interactive Gate)</option>
             </select>
           </div>
         </div>
 
         <div class="builder-output-bar">
-          <code id="builder-cmd">otcat --modbus 192.168.1.10:502 --read holding:40001 --json --confirm</code>
+          <code id="builder-cmd">otcat --modbus 192.168.1.10:502 --read holding:40001 --json</code>
           <div style="display: flex; gap: 10px; flex-wrap: wrap;">
             <button class="btn-copy" onclick="executeCustomCmd()">Run in Terminal</button>
             <button class="btn-copy" onclick="copyText(document.getElementById('builder-cmd').innerText, this)">Copy Command</button>
@@ -1620,22 +1564,15 @@
     <section id="simulator" class="container reveal section-spacing-lg">
       <div class="split-feature-section">
         <div class="split-text">
-          <h3>Read, watch & write <span class="hl-badge">straight from your shell</span></h3>
-          <p>No heavy GUI software overhead. Execute single-shot register reads or stream continuous live telemetry watch loops with exponential backoff and zero vendor bloat.</p>
+          <h3>Read, watch & write from <span class="hl-badge">simply standard shell</span></h3>
+          <p>No GUI overhead. Run single-shot queries or continuous live telemetry watch streams with jittered exponential backoff for field resilience.</p>
           
-          <ul class="feature-bullets-list">
-            <li><span><strong>Zero GUI Overhead:</strong> Sub-5ms Modbus TCP query response times over terminal socket.</span></li>
-            <li><span><strong>Safety Write Gate:</strong> Interactive confirmation and <code>--confirm</code> flag prevent write accidents.</span></li>
-            <li><span><strong>Live Telemetry Watch:</strong> Stream real-time telemetry into <code>awk</code>, <code>jq</code>, or <code>grep</code> pipelines.</span></li>
-          </ul>
-
-          <div class="tip-card-editorial">
-            <span class="tip-badge">Quick Tip</span>
-            <span>Use <code>otc</code> as a short binary alias (<code>nc</code> : <code>netcat</code> :: <code>otc</code> : <code>otcat</code>) for maximum typing speed.</span>
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; border-left: 3px solid var(--orange); padding-left: 16px;">
+            <strong>Quick Tip:</strong> Use <code>otc</code> as a short binary alias for maximum shell typing speed.
           </div>
         </div>
 
-        <!-- Interactive Terminal Simulator with Cursor & Footer -->
+        <!-- Interactive Terminal Simulator with Cursor -->
         <div class="terminal-window">
           <div class="terminal-header">
             <div class="terminal-dots">
@@ -1662,13 +1599,6 @@
   <span class="json-key">"value"</span>: <span class="json-num">12450</span>,
   <span class="json-key">"status"</span>: <span class="json-val">"OK"</span>
 }<span class="blinking-cursor"></span></div>
-          </div>
-          <div class="terminal-footer">
-            <div>
-              <span class="term-status-dot"></span>
-              <span id="term-status-text">192.168.1.10:502 [CONNECTED]</span>
-            </div>
-            <div class="term-status-meta" id="term-status-meta">Modbus TCP • Latency: 3.4ms</div>
           </div>
         </div>
       </div>
@@ -1895,29 +1825,115 @@
 
     // Command Builder Update Logic
     function updateBuilder() {
+      const binElem = document.getElementById('cfg-bin');
+      const bin = binElem ? binElem.value : 'otcat';
       const proto = document.getElementById('cfg-proto').value;
       const host = document.getElementById('cfg-host').value.trim() || '192.168.1.10:502';
       const op = document.getElementById('cfg-op').value;
       const addr = document.getElementById('cfg-addr').value.trim() || 'holding:40001';
       const fmt = document.getElementById('cfg-fmt').value;
       const safety = document.getElementById('cfg-safety').value;
+      
+      const valElem = document.getElementById('cfg-val');
+      const val = valElem ? valElem.value.trim() || '100' : '100';
 
-      document.getElementById('builder-cmd').innerText = `otcat ${proto} ${host} ${op} ${addr} ${fmt} ${safety}`.replace(/\s+/g, ' ').trim();
+      const intElem = document.getElementById('cfg-interval');
+      const interval = intElem ? intElem.value.trim() || '500ms' : '500ms';
+
+      const groupVal = document.getElementById('group-val');
+      const groupInterval = document.getElementById('group-interval');
+      const groupFmt = document.getElementById('group-fmt');
+      const groupSafety = document.getElementById('group-safety');
+
+      let cmdParts = [bin, proto, host, op, addr];
+
+      if (op === '--write') {
+        if (groupVal) groupVal.style.display = 'flex';
+        if (groupInterval) groupInterval.style.display = 'none';
+        if (groupFmt) groupFmt.style.display = 'none';
+        if (groupSafety) groupSafety.style.display = 'flex';
+        cmdParts.push(`--value ${val}`);
+        if (safety) cmdParts.push(safety);
+      } else if (op === '--watch') {
+        if (groupVal) groupVal.style.display = 'none';
+        if (groupInterval) groupInterval.style.display = 'flex';
+        if (groupFmt) groupFmt.style.display = 'flex';
+        if (groupSafety) groupSafety.style.display = 'none';
+        cmdParts.push(`--interval ${interval}`);
+        cmdParts.push(fmt);
+      } else {
+        // --read
+        if (groupVal) groupVal.style.display = 'none';
+        if (groupInterval) groupInterval.style.display = 'none';
+        if (groupFmt) groupFmt.style.display = 'flex';
+        if (groupSafety) groupSafety.style.display = 'none';
+        cmdParts.push(fmt);
+      }
+
+      document.getElementById('builder-cmd').innerText = cmdParts.join(' ').replace(/\s+/g, ' ').trim();
     }
 
     function executeCustomCmd() {
       const customCmd = document.getElementById('builder-cmd').innerText;
+      const binElem = document.getElementById('cfg-bin');
+      const bin = binElem ? binElem.value : 'otcat';
+      const proto = document.getElementById('cfg-proto').value;
+      const host = document.getElementById('cfg-host').value.trim() || '192.168.1.10:502';
+      const op = document.getElementById('cfg-op').value;
+      const addr = document.getElementById('cfg-addr').value.trim() || 'holding:40001';
+      const fmt = document.getElementById('cfg-fmt').value;
+      const safety = document.getElementById('cfg-safety').value;
+      const valElem = document.getElementById('cfg-val');
+      const val = valElem ? valElem.value.trim() || '100' : '100';
+      const intElem = document.getElementById('cfg-interval');
+      const interval = intElem ? intElem.value.trim() || '500ms' : '500ms';
+
       document.getElementById('simulator').scrollIntoView({ behavior: 'smooth' });
 
+      // Highlight active demo tabs state or show custom tab indicator
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-selected', 'false');
+      });
+
       const term = document.getElementById('term-body');
+      let outputContent = '';
+
+      if (proto !== '--modbus') {
+        outputContent = `<div class="term-output" style="color:#38bdf8;">[DRIVER ROADMAP NOTICE] Flag ${proto} registered for host ${host}.\nConnecting to controller for target register ${addr}...\nSTATUS: Registered driver stub active.</div>`;
+      } else if (op === '--write') {
+        const hexVal = '0x' + parseInt(val, 10).toString(16).padStart(4, '0').toUpperCase();
+        if (safety === '--confirm') {
+          outputContent = `<div class="term-output"><span style="color:var(--green); font-weight:bold;">[SAFETY GATE CONFIRMED]</span> Writing value ${val} (${hexVal}) to ${addr} on ${host}...\nSUCCESS: Register ${addr} updated cleanly.</div>`;
+        } else {
+          outputContent = `<div class="term-output">CONFIRM WRITE: Write ${val} (${hexVal}) to ${addr} on ${host}? [y/N] y\n<span style="color:var(--green); font-weight:bold;">SUCCESS:</span> Register ${addr} updated to ${val}.</div>`;
+        }
+      } else if (op === '--watch') {
+        const table = addr.split(':')[0] || 'holding';
+        outputContent = `<div class="term-output">12450\n12452\n12455\n12460\n<span style="color:var(--orange); font-weight:bold;">(watching ${table} telemetry every ${interval}... press Ctrl+C to stop)</span></div>`;
+      } else {
+        // Read mode
+        const table = addr.split(':')[0] || 'holding';
+        if (fmt === '--json') {
+          outputContent = `<div class="term-output">{
+  <span class="json-key">"address"</span>: <span class="json-val">"${addr}"</span>,
+  <span class="json-key">"table"</span>: <span class="json-val">"${table}"</span>,
+  <span class="json-key">"offset"</span>: <span class="json-num">0</span>,
+  <span class="json-key">"value"</span>: <span class="json-num">12450</span>,
+  <span class="json-key">"quality"</span>: <span class="json-val">"GOOD"</span>,
+  <span class="json-key">"status"</span>: <span class="json-val">"OK"</span>
+}</div>`;
+        } else if (fmt === '--csv') {
+          outputContent = `<div class="term-output" style="color:#ffffff;">timestamp,address,value,quality,status\n2026-07-23T14:34:36Z,${addr},12450,GOOD,OK</div>`;
+        } else {
+          // --raw
+          outputContent = `<div class="term-output" style="color:var(--green); font-weight:bold; font-size:1.1rem;">12450</div>`;
+        }
+      }
+
       term.innerHTML = `
         <div class="term-line"><span class="term-prompt">$</span><span class="term-cmd">${customCmd}</span></div>
-        <div class="term-output">{
-  <span class="json-key">"command"</span>: <span class="json-val">"${customCmd}"</span>,
-  <span class="json-key">"status"</span>: <span class="json-val">"CONNECTED"</span>,
-  <span class="json-key">"response_time_ms"</span>: <span class="json-num">3.4</span>,
-  <span class="json-key">"data"</span>: [12450]
-}<span class="blinking-cursor"></span></div>`;
+        ${outputContent}<span class="blinking-cursor"></span>`;
     }
 
     function clearTerminal() {
@@ -2028,12 +2044,7 @@
       btn.setAttribute('aria-selected', 'true');
 
       const term = document.getElementById('term-body');
-      const statusText = document.getElementById('term-status-text');
-      const statusMeta = document.getElementById('term-status-meta');
-
       if (type === 'read_json') {
-        if (statusText) statusText.innerText = "192.168.1.10:502 [CONNECTED]";
-        if (statusMeta) statusMeta.innerText = "Modbus TCP • Latency: 3.4ms";
         term.innerHTML = `
           <div class="term-line"><span class="term-prompt">$</span><span class="term-cmd">otcat --modbus 192.168.1.10:502 --read holding:40001 --json</span></div>
           <div class="term-output">{
@@ -2044,14 +2055,10 @@
   <span class="json-key">"status"</span>: <span class="json-val">"OK"</span>
 }<span class="blinking-cursor"></span></div>`;
       } else if (type === 'watch_mode') {
-        if (statusText) statusText.innerText = "192.168.1.10:502 [STREAMING 500ms]";
-        if (statusMeta) statusMeta.innerText = "Watch Loop • Poll 500ms";
         term.innerHTML = `
           <div class="term-line"><span class="term-prompt">$</span><span class="term-cmd">otc --modbus 192.168.1.10:502 --watch holding:40001 --interval 500ms --raw</span></div>
           <div class="term-output">12450\n12452\n12455\n12460 <span style="color:var(--orange); font-weight:bold;">(watching telemetry every 500ms...)</span><span class="blinking-cursor"></span></div>`;
       } else if (type === 'write_confirm') {
-        if (statusText) statusText.innerText = "192.168.1.10:502 [WRITE CONFIRMED]";
-        if (statusMeta) statusMeta.innerText = "Safety Gate Passed • FC06";
         term.innerHTML = `
           <div class="term-line"><span class="term-prompt">$</span><span class="term-cmd">otcat --modbus 192.168.1.10:502 --write holding:40001 --value 100 --confirm</span></div>
           <div class="term-output"><span style="color:var(--green); font-weight:bold;">[SAFETY GATE CONFIRMED]</span> Writing value 100 to holding:40001...\nSUCCESS: Register 40001 updated to 100 (0x0064).<span class="blinking-cursor"></span></div>`;
