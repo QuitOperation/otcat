@@ -17,7 +17,8 @@
   <a href="https://go.dev/"><img src="https://img.shields.io/badge/Go-1.22+-007d9c?style=for-the-badge&logo=go" alt="Go Version"></a>
   <a href="https://pypi.org/project/otcat/"><img src="https://img.shields.io/pypi/v/otcat?style=for-the-badge&logo=python&color=3776ab" alt="PyPI Package"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-10b981?style=for-the-badge" alt="MIT License"></a>
-  <a href="https://goreportcard.com/report/github.com/QuitOperation/otcat"><img src="https://goreportcard.com/badge/github.com/QuitOperation/otcat?style=for-the-badge" alt="Go Report Card"></a>
+  <a href="SECURITY.md"><img src="https://img.shields.io/badge/security-policy-10b981?style=for-the-badge&logo=shield" alt="Security Policy"></a>
+  <a href="https://pkg.go.dev/github.com/QuitOperation/otcat"><img src="https://img.shields.io/badge/pkg.go.dev-doc-007d9c?style=for-the-badge&logo=go" alt="Go Docs"></a>
   <a href="https://github.com/QuitOperation/otcat/stargazers"><img src="https://img.shields.io/github/stars/QuitOperation/otcat?style=for-the-badge&color=ff4d00" alt="GitHub Stars"></a>
 </p>
 
@@ -25,6 +26,7 @@
   <a href="https://quitoperation.github.io/otcat/">🌐 <strong>Live Website</strong></a> •
   <a href="#install--build">📦 <strong>Packages & Install</strong></a> •
   <a href="#python-bindings">🐍 <strong>Python Library</strong></a> •
+  <a href="SECURITY.md">🛡️ <strong>Security Policy</strong></a> •
   <a href="docs/driver_roadmap.md">🗺️ <strong>Driver Roadmap</strong></a> •
   <a href="CONTRIBUTING.md">🤝 <strong>Contributing</strong></a>
 </p>

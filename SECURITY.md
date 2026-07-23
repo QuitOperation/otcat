@@ -16,8 +16,8 @@ We provide security updates and patches for the following versions of `otcat`:
 
 | Version | Supported |
 | ------- | --------- |
-| `v0.1.x` (Latest Release) | ✅ Yes |
-| `< v0.1.0` | ❌ No |
+| `v1.0.x` (Latest Release) | ✅ Yes |
+| `< v1.0.0` | ❌ No |
 | `main` branch | ✅ Yes |
 
 ---
