@@ -1363,6 +1363,7 @@
           <button class="pkg-tab-btn" role="tab" aria-selected="false" onclick="switchPkg('apk', this)">Alpine Linux (APK)</button>
           <button class="pkg-tab-btn" role="tab" aria-selected="false" onclick="switchPkg('pip', this)">Python PyPI (pip)</button>
           <button class="pkg-tab-btn" role="tab" aria-selected="false" onclick="switchPkg('go', this)">Go Toolchain</button>
+          <button class="pkg-tab-btn" role="tab" aria-selected="false" onclick="switchPkg('docker', this)">Docker (GHCR)</button>
         </div>
 
         <div class="pkg-cmd-display">
@@ -1797,6 +1798,8 @@
         cmdCode.innerText = 'pip install otcat';
       } else if (pkg === 'go') {
         cmdCode.innerText = 'go install github.com/QuitOperation/otcat/cmd/otc@latest';
+      } else if (pkg === 'docker') {
+        cmdCode.innerText = 'docker pull ghcr.io/quitoperation/otcat:latest';
       }
     }
 

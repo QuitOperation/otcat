@@ -150,6 +150,9 @@ pip install otcat
 
 # Go Toolchain (Go 1.22+)
 go install github.com/QuitOperation/otcat/cmd/otc@latest
+
+# Docker Container (GitHub Container Registry)
+docker pull ghcr.io/quitoperation/otcat:latest
 ```
 
 ### Build from Source
