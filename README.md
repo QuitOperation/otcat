@@ -70,7 +70,7 @@ cat setpoints.txt | otcat --modbus 192.168.1.10:502 --write holding:40001 --from
 
 ---
 
-##💡 Why otcat?
+## 💡 Why otcat?
 
 70% of field OT troubleshooting is simply verifying register readings. Traditional vendor SCADA software requires gigabytes of proprietary installation, complex licensing, and Windows GUIs.
 
