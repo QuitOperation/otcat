@@ -78,21 +78,78 @@ jobs:
       - name: Generate APT, DNF (RPM), and Alpine (APK) repositories for GitHub Pages
         run: |
           sudo apt-get update && sudo apt-get install -y dpkg-dev createrepo-c
-          mkdir -p gh-pages-repo/rpm gh-pages-repo/alpine/x86_64 gh-pages-repo/alpine/aarch64
+          mkdir -p gh-pages-repo/debian/amd64 gh-pages-repo/debian/arm64 gh-pages-repo/rpm gh-pages-repo/alpine/x86_64 gh-pages-repo/alpine/aarch64
 
-          # 1. APT Repository (Debian/Ubuntu - root + subfolder)
-          cp dist/*.deb gh-pages-repo/
+          # 1a. APT Repository for amd64
+          cp dist/*_amd64.deb gh-pages-repo/debian/amd64/
           (
-            cd gh-pages-repo
+            cd gh-pages-repo/debian/amd64
             dpkg-scanpackages . /dev/null > Packages
-            gzip -k -f Packages
+            gzip -9 -k -f Packages
+            DATE=$(date -u -R)
             echo "Origin: QuitOperation" > Release
             echo "Label: otcat" >> Release
             echo "Suite: stable" >> Release
             echo "Codename: stable" >> Release
+            echo "Date: $DATE" >> Release
+            echo "Architectures: amd64" >> Release
+            echo "Components: main" >> Release
+            echo "Description: otcat APT repository (amd64)" >> Release
+            echo "SHA256:" >> Release
+            P_HASH=$(sha256sum Packages | cut -d' ' -f1)
+            P_SIZE=$(stat -c%s Packages)
+            GZ_HASH=$(sha256sum Packages.gz | cut -d' ' -f1)
+            GZ_SIZE=$(stat -c%s Packages.gz)
+            echo " $P_HASH $P_SIZE Packages" >> Release
+            echo " $GZ_HASH $GZ_SIZE Packages.gz" >> Release
+          )
+
+          # 1b. APT Repository for arm64
+          cp dist/*_arm64.deb gh-pages-repo/debian/arm64/
+          (
+            cd gh-pages-repo/debian/arm64
+            dpkg-scanpackages . /dev/null > Packages
+            gzip -9 -k -f Packages
+            DATE=$(date -u -R)
+            echo "Origin: QuitOperation" > Release
+            echo "Label: otcat" >> Release
+            echo "Suite: stable" >> Release
+            echo "Codename: stable" >> Release
+            echo "Date: $DATE" >> Release
+            echo "Architectures: arm64" >> Release
+            echo "Components: main" >> Release
+            echo "Description: otcat APT repository (arm64)" >> Release
+            echo "SHA256:" >> Release
+            P_HASH=$(sha256sum Packages | cut -d' ' -f1)
+            P_SIZE=$(stat -c%s Packages)
+            GZ_HASH=$(sha256sum Packages.gz | cut -d' ' -f1)
+            GZ_SIZE=$(stat -c%s Packages.gz)
+            echo " $P_HASH $P_SIZE Packages" >> Release
+            echo " $GZ_HASH $GZ_SIZE Packages.gz" >> Release
+          )
+
+          # 1c. Root APT Repository (multi-arch fallback)
+          cp dist/*.deb gh-pages-repo/
+          (
+            cd gh-pages-repo
+            dpkg-scanpackages . /dev/null > Packages
+            gzip -9 -k -f Packages
+            DATE=$(date -u -R)
+            echo "Origin: QuitOperation" > Release
+            echo "Label: otcat" >> Release
+            echo "Suite: stable" >> Release
+            echo "Codename: stable" >> Release
+            echo "Date: $DATE" >> Release
             echo "Architectures: amd64 arm64" >> Release
             echo "Components: main" >> Release
             echo "Description: otcat APT repository" >> Release
+            echo "SHA256:" >> Release
+            P_HASH=$(sha256sum Packages | cut -d' ' -f1)
+            P_SIZE=$(stat -c%s Packages)
+            GZ_HASH=$(sha256sum Packages.gz | cut -d' ' -f1)
+            GZ_SIZE=$(stat -c%s Packages.gz)
+            echo " $P_HASH $P_SIZE Packages" >> Release
+            echo " $GZ_HASH $GZ_SIZE Packages.gz" >> Release
           )
 
           # 2. RPM Repository (Fedora/RHEL/CentOS - dnf)
