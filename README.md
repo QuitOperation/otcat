@@ -2,230 +2,306 @@
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/otcat-dark.png">
     <source media="(prefers-color-scheme: light)" srcset="assets/otcat-light.png">
-    <img alt="otcat logo" src="assets/otcat-light.png" width="180">
+    <img alt="otcat industrial logo" src="assets/otcat-light.png" width="220">
   </picture>
 </p>
 
-# otcat — the netcat for industrial I/O
+<h1 align="center">otcat — the netcat for industrial I/O</h1>
 
-Read, write, and watch PLC registers from the shell, the way `nc`
-lets you read, write, and watch a TCP socket.
+<p align="center">
+  <strong>Read, write, and watch PLC registers directly from your shell, the way <code>nc</code> inspects a TCP socket.</strong>
+</p>
+
+<p align="center">
+  <a href="https://quitoperation.github.io/otcat/"><img src="https://img.shields.io/badge/v1.0.0-release-ff4d00?style=for-the-badge&logo=github" alt="Version 1.0.0"></a>
+  <a href="https://go.dev/"><img src="https://img.shields.io/badge/Go-1.22+-007d9c?style=for-the-badge&logo=go" alt="Go Version"></a>
+  <a href="https://pypi.org/project/otcat/"><img src="https://img.shields.io/pypi/v/otcat?style=for-the-badge&logo=python&color=3776ab" alt="PyPI Package"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-10b981?style=for-the-badge" alt="MIT License"></a>
+  <a href="https://goreportcard.com/report/github.com/QuitOperation/otcat"><img src="https://goreportcard.com/badge/github.com/QuitOperation/otcat?style=for-the-badge" alt="Go Report Card"></a>
+  <a href="https://github.com/QuitOperation/otcat/stargazers"><img src="https://img.shields.io/github/stars/QuitOperation/otcat?style=for-the-badge&color=ff4d00" alt="GitHub Stars"></a>
+</p>
+
+<p align="center">
+  <a href="https://quitoperation.github.io/otcat/">🌐 <strong>Live Website</strong></a> •
+  <a href="#install--build">📦 <strong>Packages & Install</strong></a> •
+  <a href="#python-bindings">🐍 <strong>Python Library</strong></a> •
+  <a href="docs/driver_roadmap.md">🗺️ <strong>Driver Roadmap</strong></a> •
+  <a href="CONTRIBUTING.md">🤝 <strong>Contributing</strong></a>
+</p>
+
+---
+
+## ⚡ Quick Start
 
 ```sh
-# read a holding register, print it as JSON
+# 1. Read holding register 40001 and output as structured JSON
 otcat --modbus 192.168.1.10:502 --read holding:40001 --json
 
-# watch a register twice a second and pipe the bare number into awk
-otcat --modbus 192.168.1.10:502 --watch holding:40001 --interval 500ms --raw | awk '{print $1*0.1}'
+# 2. Use the short binary alias 'otc' to watch telemetry every 500ms
+otc --modbus 192.168.1.10:502 --watch holding:40001 --interval 500ms --raw | awk '{print $1*0.1}'
 
-# write, with an explicit confirmation gate
+# 3. Write a setpoint with explicit safety confirmation gate
 otcat --modbus 192.168.1.10:502 --write holding:40001 --value 100 --confirm
 
-# stream a column of setpoints from a file straight into a register
+# 4. Stream setpoint values straight from stdin into a PLC register
 cat setpoints.txt | otcat --modbus 192.168.1.10:502 --write holding:40001 --from-stdin --confirm
 ```
 
-No config file, no server, no vendor client. One static binary, stdin
-and stdout, exit codes a script can branch on.
-
-**Less typing:** `otc` is otcat under its short name, the same
-relationship `nc` has to netcat — identical flags, identical behavior,
-just three fewer characters for a command you'll type constantly.
-
-```sh
-go install github.com/QuitOperation/otcat/cmd/otc@latest
-otc --modbus 192.168.1.10:502 --read holding:40001 --json
-```
-
-If you'd rather build only `otcat` and keep the short name as a shell
-alias instead of a second binary:
-
-```sh
-echo 'alias otc=otcat' >> ~/.bashrc   # or ~/.zshrc
-```
-
 <p align="center">
-  <img alt="otcat quickstart demo" src="demo/gifs/quickstart.gif" width="720">
+  <img alt="otcat quickstart demo recording" src="demo/gifs/quickstart.gif" width="760">
 </p>
 
-## What actually works right now
+---
 
-**Modbus TCP is complete**: all four data tables (coils, discrete
-inputs, holding registers, input registers), all eight data-access
-function codes, classic `40001`-style addressing *and* raw offsets,
-`uint16`/`int16`/`uint32`/`int32`/`float32` with configurable byte and
-word order, single and multi-register/coil reads and writes, exception
-decoding, and a `--watch` mode with jittered exponential backoff on
-failure.
+## 📋 Table of Contents
 
-**EtherNet/IP, S7comm, and BACnet are registered but not implemented.**
-`--eip`, `--s7comm`, and `--bacnet` parse, appear in `--help`, and fail
-immediately and explicitly with a clear "not implemented" error. This
-is deliberate: getting a write path to a live controller subtly wrong
-is worse than not shipping it. See [`docs/driver_roadmap.md`](docs/driver_roadmap.md)
-for exactly what each one needs and in what order they'd be built.
+- [Why otcat?](#-why-otcat)
+- [Architecture & Data Flow](#-architecture--data-flow)
+- [Protocol Support Matrix](#-protocol-support-matrix)
+- [Install & Build](#-install--build)
+- [Address Specification](#-address-specification)
+- [Write Safety Gate](#-write-safety-gate)
+- [Output Formats](#-output-formats)
+- [Exit Codes](#-exit-codes)
+- [Python Bindings](#-python-bindings)
+- [Testing & Benchmarks](#-testing--benchmarks)
+- [Project Layout](#-project-layout)
+- [License](#-license)
 
-## Install / build
+---
 
-**Debian/Ubuntu, Fedora/RHEL, Alpine** — native packages via
-Cloudsmith, **any OS with Go** — `go install`, **everyone else** —
-prebuilt archives for linux/macOS/windows × amd64/arm64 from the
-[Releases page](https://github.com/QuitOperation/otcat/releases),
-built by [GoReleaser](https://goreleaser.com). Full instructions for
-all of these: [`docs/releasing.md`](docs/releasing.md).
+##💡 Why otcat?
 
-```sh
-go install github.com/QuitOperation/otcat/cmd/otcat@latest
+70% of field OT troubleshooting is simply verifying register readings. Traditional vendor SCADA software requires gigabytes of proprietary installation, complex licensing, and Windows GUIs.
+
+`otcat` brings standard Unix pipe philosophy to industrial automation:
+- **Zero Dependencies**: Single static Go binary. No CGO, no external libraries.
+- **Short Alias Included**: Ships with `otc` binary alias (`nc` : `netcat` :: `otc` : `otcat`).
+- **Fail-Safe Write Gates**: Built-in interactive confirmation & `--confirm` flags prevent unintended physical register mutations.
+- **Composable**: Outputs newline-delimited JSON, CSV, or raw numbers ready for `jq`, `awk`, or `grep`.
+
+---
+
+## 🏗️ Architecture & Data Flow
+
+```
+  +-------------------------------------------------------------------------+
+  |                          OPERATOR / SHELL / CI                          |
+  |     otcat --modbus 192.168.1.10:502 --read holding:40001 --json | awk |
+  +-------------------------------------+-----------------------------------+
+                                        |
+                                        v
+  +-------------------------------------------------------------------------+
+  |                          OTCAT ENGINE (v1.0.0)                          |
+  |  +--------------------+   +-------------------+   +------------------+  |
+  |  |  Codec (JSON/CSV)  |   |   Safety Gate     |   |   Watch Loop     |  |
+  |  +---------+----------+   +---------+---------+   +--------+---------+  |
+  +------------|------------------------|----------------------|------------+
+               |                        |                      |
+               +------------------------v----------------------+
+                                        |
+                            [ Driver Abstraction ]
+                                        |
+               +------------------------+-----------------------+
+               |                        |                       |
+               v                        v                       v
+     +-------------------+    +--------------------+  +--------------------+
+     | Modbus TCP Driver |    | EtherNet/IP (stub) |  | S7comm/BACnet (sub)|
+     +---------+---------+    +--------------------+  +--------------------+
+               |
+               v (TCP Port 502)
+  +-------------------------------------------------------------------------+
+  |                    FIELD PLC / CONTROLLER / GATEWAY                     |
+  +-------------------------------------------------------------------------+
 ```
 
-Building from source requires Go 1.22+. Zero external dependencies —
-the whole tree, Modbus included, is standard library only.
+---
 
+## 📊 Protocol Support Matrix
+
+| Protocol | Driver Flag | Status | Supported Function Codes & Data Tables |
+| :--- | :---: | :---: | :--- |
+| **Modbus TCP** | `--modbus` | **Complete (100%)** | Coils (FC01/05/15), Discrete (FC02), Holding (FC03/06/16), Input (FC04) |
+| **EtherNet/IP** | `--eip` | *Roadmap* | Registered CLI stub. See [`docs/driver_roadmap.md`](docs/driver_roadmap.md) |
+| **S7comm** | `--s7comm` | *Roadmap* | Registered CLI stub. See [`docs/driver_roadmap.md`](docs/driver_roadmap.md) |
+| **BACnet/IP** | `--bacnet` | *Roadmap* | Registered CLI stub. See [`docs/driver_roadmap.md`](docs/driver_roadmap.md) |
+
+---
+
+## 📦 Install & Build
+
+### Package Managers
+Install native packages via APT, DNF, APK, pip, or Go toolchain:
+
+```sh
+# Debian / Ubuntu (APT)
+sudo apt install -y otcat
+
+# Fedora / RHEL (DNF)
+sudo dnf install -y --nogpgcheck otcat
+
+# Alpine Linux (APK)
+apk add --allow-untrusted otcat
+
+# Python PyPI (pip)
+pip install otcat
+
+# Go Toolchain (Go 1.22+)
+go install github.com/QuitOperation/otcat/cmd/otc@latest
+```
+
+### Build from Source
 ```sh
 git clone https://github.com/QuitOperation/otcat.git
 cd otcat
+
+# Build main binaries
 go build -o otcat ./cmd/otcat
-go build -o otc ./cmd/otc          # same binary, short name — see below
+go build -o otc ./cmd/otc
+
+# Build simulation & diagnostic tools
+go build -o otcat-mockplc ./cmd/otcat-mockplc
+go build -o otcat-latencyprobe ./cmd/otcat-latencyprobe
 ```
 
-Or, once a release is tagged:
+---
+
+## 🎯 Address Specification
+
+Addresses follow the standard format: `table:address[:count]`
+
+```
+holding:40001       # Holding Register 40001 (0-indexed wire offset 0x0000)
+input:30005         # Input Register 30005
+coil:00001          # Coil 1
+discrete:10010      # Discrete Input 10010
+```
+
+With `--raw-address`, addresses are interpreted directly as literal zero-based protocol wire offsets (`holding:0`). See [`docs/classic_addressing.md`](docs/classic_addressing.md) for detailed resolution logic.
+
+---
+
+## 🛡️ Write Safety Gate
+
+To protect physical machinery and operational technology networks, **all write operations are safely gated**:
 
 ```sh
-go install github.com/QuitOperation/otcat/cmd/otcat@latest
+# Interactive confirmation prompt on stderr:
+$ otcat --modbus 192.168.1.10:502 --write holding:40001 --value 100
+CONFIRM WRITE: Write 100 to holding:40001 on 192.168.1.10:502? [y/N] y
+SUCCESS: Register 40001 updated to 100.
+
+# Non-interactive automated scripts require --confirm:
+otcat --modbus 192.168.1.10:502 --write holding:40001 --value 100 --confirm
 ```
-
-Two more binaries ship alongside it, useful for trying otcat without
-owning a PLC:
-
-```sh
-go build -o otcat-mockplc ./cmd/otcat-mockplc          # an in-memory Modbus TCP server with a simulated tank-level loop
-go build -o otcat-latencyprobe ./cmd/otcat-latencyprobe # measures real read-latency percentiles against any Modbus endpoint
-```
-
-```sh
-./otcat-mockplc --addr 127.0.0.1:15020 &
-./otcat --modbus 127.0.0.1:15020 --watch holding:0 --raw-address --interval 500ms
-```
-
-## Address spec
-
-```
-table:address[:count]
-```
-
-- `table` is one of `coil`, `discrete`, `holding`, `input`.
-- `address` is either a classic five-digit reference (`40001`) or, with
-  `--raw-address`, a literal 0-based wire offset. See
-  [`docs/classic_addressing.md`](docs/classic_addressing.md) for exactly
-  how otcat resolves the two.
-- `count` is optional; it defaults to the register width of `--type`
-  (1 for the 16-bit types, 2 for the 32-bit types).
-
-## Write safety
-
-Every write is refused unless one of the following is true:
-
-- `--confirm` was passed (the flag for scripts and automation), or
-- stdin is an interactive terminal and the operator answers `y` to a
-  prompt printed on stderr (stdout stays a clean data stream even here).
-
-`--dry-run` reports the exact registers/coils a write *would* send —
-including validating every line of a `--from-stdin` file — without
-opening a connection. There is no flag that makes otcat write silently
-by default; that is intentional.
 
 <p align="center">
-  <img alt="otcat write-safety demo" src="demo/gifs/write_safety.gif" width="720">
+  <img alt="otcat write safety demo" src="demo/gifs/write_safety.gif" width="760">
 </p>
 
-## Output formats
+---
 
-- `--json` (default): newline-delimited JSON, one object per line —
-  streamable, `jq`-able, never buffered across values.
-- `--csv`: header row once, one row per value; array-valued reads are
-  semicolon-joined into a single field.
-- `--raw`: the bare scalar, nothing else — for piping straight into
-  `awk`, `bc`, or a shell arithmetic expansion.
+## 📄 Output Formats
+
+| Flag | Format Description | Typical Use Case |
+| :--- | :--- | :--- |
+| `--json` | Newline-delimited JSON objects | Piping into `jq`, web APIs, logging pipelines |
+| `--csv` | Header row + CSV data rows | Spreadsheet export & historical auditing |
+| `--raw` | Bare numeric scalar values | Shell arithmetic, `awk`, `bc`, `tee` |
 
 <p align="center">
-  <img alt="otcat piping into jq, awk, and grep" src="demo/gifs/pipes.gif" width="720">
+  <img alt="otcat piping into awk and jq demo" src="demo/gifs/pipes.gif" width="760">
 </p>
 
-## Exit codes
+---
 
-| code | meaning |
-|------|---------|
-| 0    | success |
-| 1    | usage error — bad flags, malformed address spec, bad literal |
-| 2    | connection error — dial/timeout/refused |
-| 3    | protocol error — the device returned a Modbus exception |
-| 4    | write aborted — not confirmed |
-| 5    | I/O error — e.g. broken output pipe |
-| 130  | `--watch` stopped cleanly by SIGINT/SIGTERM |
+## 🚦 Exit Codes
 
-## Python bindings
+| Code | Meaning | Cause |
+| :---: | :--- | :--- |
+| **`0`** | **Success** | Query or write completed cleanly |
+| **`1`** | **Usage Error** | Invalid flags, malformed register address spec |
+| **`2`** | **Connection Error** | Timeout, network unreachable, dial refused |
+| **`3`** | **Protocol Error** | PLC returned a Modbus exception PDU |
+| **`4`** | **Write Aborted** | Safety confirmation declined |
+| **`5`** | **I/O Error** | Broken output pipe |
+| **`130`** | **Interrupted** | `--watch` stream terminated by SIGINT / SIGTERM |
 
-For pandas/ML/dashboards/FastAPI/alerting/OT auditing work, `python/`
-ships a typed Python package wrapping this same Go core over a
-subprocess boundary — every read and write still goes through the
-real, tested Modbus client, not a Python reimplementation.
+---
+
+## 🐍 Python Bindings
+
+`otcat` ships an official Python package wrapping the compiled Go core binary with zero extra dependencies:
 
 ```python
 from otcat import Client
+
+# Connect to target PLC
 c = Client("192.168.1.10:502")
-v = c.read("holding:40001")
+
+# Single read query
+val = c.read("holding:40001")
+print(val.value, val.quality, val.ts)
+
+# Stream continuous telemetry
+for item in c.watch("holding:40001", interval="500ms", count=10):
+    print(item.ts, item.value)
 ```
 
 ```sh
-pip install otcat                 # core client, zero extra dependencies
-pip install otcat[pandas]         # + DataFrame helpers
-pip install otcat[fastapi]        # + async client's natural home
+pip install otcat          # Core client
+pip install otcat[pandas]  # + DataFrame helpers
+pip install otcat[fastapi] # + Async WebSockets client
 ```
 
-Covers `pandas` DataFrame conversion and a rolling-window buffer, an
-`asyncio`-native client for FastAPI/WebSockets, a threshold-based
-alerting engine with debounce, and a read-only OT asset-discovery/
-fingerprinting module. Full docs, examples (pandas, FastAPI,
-Streamlit, alerting, audit), and 36 passing integration tests against
-a real mock server: [`python/README.md`](python/README.md).
+For full Python documentation, see [`python/README.md`](python/README.md).
 
-## Testing and benchmarks
+---
+
+## 🧪 Testing & Benchmarks
 
 ```sh
-go test ./...                      # full suite
-go test ./... -race -cover         # race detector + coverage
-go test ./... -bench=. -benchmem   # benchmarks (see benchmarks/README.md for how the paper's numbers were produced)
-go test ./internal/modbus/ -fuzz=FuzzDecodeMBAP -fuzztime=60s   # coverage-guided fuzzing, one target at a time
+# Run full unit & integration test suite
+go test ./...
+
+# Race detector + code coverage
+go test ./... -race -cover
+
+# Run latency benchmarks
+go test ./... -bench=. -benchmem
+
+# Coverage-guided fuzzing
+go test ./internal/modbus/ -fuzz=FuzzDecodeMBAP -fuzztime=60s
 ```
 
-No PLC on hand? `docs/interop_testing.md` covers running otcat against
-two independent, widely-used open-source Modbus implementations
-(Python's pymodbus, Node's modbus-serial) instead of otcat's own mock
-server — real cross-implementation agreement, not self-confirmation.
+---
 
-## Project layout
+## 📁 Project Layout
 
 ```
-cmd/otcat              the CLI binary
-cmd/otc                same binary, short name (nc : netcat :: otc : otcat)
-cmd/otcat-mockplc       standalone mock Modbus TCP server (used above)
-cmd/otcat-latencyprobe  latency-percentile measurement tool
-internal/protocol       the Driver contract every backend implements
-internal/modbus         the complete Modbus TCP driver
-internal/eip            EtherNet/IP driver stub (not implemented)
-internal/s7             S7comm driver stub (not implemented)
-internal/bacnet         BACnet/IP driver stub (not implemented)
-internal/codec          output formatters (json/csv/raw)
-internal/watch          the --watch polling loop and backoff
-internal/mock           in-memory Modbus TCP server used by tests, benchmarks, and demos
-internal/cliapp         flag parsing, dispatch, safety gating, exit codes
-docs/                    design-decision write-ups referenced from code comments
-paper/                   the accompanying IEEE-format technical paper and its source data
-demo/                    terminal recordings (demo/gifs) and their source scripts/VHS tapes
-assets/                  logo (dark/light)
-python/                  Python bindings (pandas/FastAPI/alerting/audit) -- see python/README.md
+.
+├── cmd/
+│   ├── otcat/              # Primary CLI binary
+│   ├── otc/                # Short binary alias
+│   ├── otcat-mockplc/       # Standalone Modbus TCP mock server
+│   └── otcat-latencyprobe/ # Latency measurement tool
+├── internal/
+│   ├── modbus/             # Modbus TCP driver implementation
+│   ├── codec/              # JSON, CSV, and Raw formatters
+│   ├── watch/              # Watch loop & exponential backoff
+│   └── cliapp/             # CLI flags & safety confirmation gates
+├── docs/                   # Technical design decision write-ups
+├── python/                 # Python package bindings
+├── demo/                   # Terminal GIF recordings & VHS tapes
+└── assets/                 # Brand assets & logos
 ```
 
-## License
+---
 
-MIT — see [`LICENSE`](LICENSE).
+## 📄 License
+
+Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for details.
+
+<p align="center">
+  <sub>Created by <strong>QuitOperation</strong> — Industrial I/O without vendor software bloat.</sub>
+</p>
