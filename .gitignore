@@ -11,6 +11,22 @@ python/.pytest_cache/
 python/.mypy_cache/
 python/.ruff_cache/
 
+# Local compiled binaries
+otcat
+otcat.exe
+otc
+otc.exe
+otcat-mockplc
+otcat-mockplc.exe
+otcat-latencyprobe
+otcat-latencyprobe.exe
+
+# OS & Editor metadata
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
 # paper folder rules
 paper/*
 !paper/README.md
