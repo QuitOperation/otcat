@@ -1,0 +1,14 @@
+Package: otcat
+Version: 1.0.0
+Architecture: arm64
+Maintainer: Moustafa Mahmoud Atta <MoustafaAt1a@outlook.com>
+Installed-Size: 4618
+Filename: ./otcat_1.0.0_arm64.deb
+Size: 1940828
+MD5sum: ec2cda4fa158d79e1f64232332360b01
+SHA1: 4d090730c29d4b1d38e07881d77e6e904917a471
+SHA256: 9a227fdd6dd48d8208f0fb664d7c6ef0abe5a19276959201021ec0b8b6dd5841
+Priority: optional
+Homepage: https://github.com/QuitOperation/otcat
+Description: otcat -- the netcat for industrial I/O. Read, write, and watch Modbus TCP registers from the shell.
+

@@ -1,0 +1,11 @@
+Origin: QuitOperation
+Label: otcat
+Suite: stable
+Codename: stable
+Date: Thu, 23 Jul 2026 00:34:40 +0000
+Architectures: amd64
+Components: main
+Description: otcat APT repository (amd64)
+SHA256:
+ be7e7e62b430e2300a51bcc8d611fd829fc6c48531905077674cb42ce9af533e 553 Packages
+ 6af55006017d25c95ee877f318fafc5431d784f6fe76552eb27bec45e4edd7b7 418 Packages.gz
